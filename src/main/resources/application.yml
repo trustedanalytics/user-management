@@ -2,7 +2,7 @@ server:
   port: 9998
 security:
   ignored: /rest/registrations/*,/rest/registrations,/new-account*,/sdoc.jsp,/*.js,/api-docs,/api-docs/default/*,/images/*,/lib/*,/css/*
-  
+
 spring.oauth2:
   client:
     accessTokenUri: ${vcap.services.sso.credentials.tokenUri}
@@ -16,11 +16,11 @@ spring.oauth2:
       keyUri: ${vcap.services.sso.credentials.tokenKey}
     userInfoUri: ${vcap.services.sso.credentials.userInfoUri}
   check_token: ${vcap.services.sso.credentials.checkTokenUri}
-  
+
 oauth:
   resource: ${vcap.services.sso.credentials.apiEndpoint}
   uaa: ${vcap.services.sso.credentials.uaaUri}
-  
+
 smtp:
   host: ${vcap.services.smtp.credentials.hostname}
   port: ${vcap.services.smtp.credentials.port_ssl}
@@ -32,7 +32,7 @@ smtp:
   #List of blocked domain. Adding new domain after comma: example.com,foo.com
   forbidden_domains: ${vcap.services.smtp.credentials.forbidden_domains:example.com}
   email_name: ${vcap.services.smtp.credentials.email_name:TrustedAnalytics}
-  
+
 web:
   debug: false
 
@@ -41,7 +41,7 @@ app:
    console:
        host: console
        useSsl: true
-  
+
 endpoints.metrics.enabled: true
 spring.profiles.active: cloud,in-memory
 

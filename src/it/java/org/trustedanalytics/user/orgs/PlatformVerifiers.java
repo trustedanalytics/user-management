@@ -40,6 +40,13 @@ public class PlatformVerifiers {
             .exchange( eq(url), eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class));
     }
 
+    public static void verifySetTokenThenExchange(RestOperations restTemplate, String token, String url, Map<String, ?> vars ) {
+
+        InOrder verifier = verifyTokenWasSet(restTemplate, token);
+        verifier.verify(restTemplate)
+            .exchange( eq(url), eq(HttpMethod.GET), eq(null), any(ParameterizedTypeReference.class), eq(vars));
+    }
+
     public static void verifySetTokenThenGetForEntity(RestOperations restTemplate, String token,
         String url, Class returnClass, Map<String, ?> vars) {
 

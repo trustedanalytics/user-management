@@ -107,19 +107,21 @@ public class SpacesIT {
         final String ORG = "6b436ee1-de3c-4996-b312-bacd54ef301a";
         Map<String, Object> pathVars = new HashMap<>();
         pathVars.put("org", ORG);
-        final String EXPECTED_BODY = "spaces for org from cf";
 
-        when(userRestTemplate.getForEntity(any(String.class), eq(String.class), any(Map.class)))
-            .thenReturn(new ResponseEntity<>(EXPECTED_BODY, HttpStatus.OK));
+        Page<CcSpace> SPACES_FROM_CF = new Page<>();
+        SPACES_FROM_CF.setResources(SpacesTestsResources.getSpacesReturnedByCf().getSpaces());
+        final String EXPECTED_SPACES = SpacesTestsResources.getSpacesExpectedToBeReturnedBySc();
+
+        when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcSpace>>() {}), any(Map.class)))
+            .thenReturn(new ResponseEntity<>(SPACES_FROM_CF, HttpStatus.OK));
 
         TestRestTemplate testRestTemplate = new TestRestTemplate();
         ResponseEntity<String> response = RestOperationsHelpers.getForEntityWithToken(testRestTemplate, TOKEN,
             BASE_URL + SpacesController.GET_SPACES_OF_ORG_URL, pathVars);
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
-        assertThat(response.getBody(), equalTo(EXPECTED_BODY));
+        assertThat(response.getBody(), equalTo(EXPECTED_SPACES));
 
-        PlatformVerifiers.verifySetTokenThenGetForEntity(userRestTemplate, TOKEN, CF_SPACES_OF_ORG_URL, String.class,
-                pathVars);
+        PlatformVerifiers.verifySetTokenThenExchange(userRestTemplate, TOKEN, CF_SPACES_OF_ORG_URL, pathVars);
     }
 }

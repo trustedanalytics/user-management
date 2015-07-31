@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -62,11 +63,11 @@ public class SpacesControllerTest {
     public void getSpaces_orgSpecified_returnSpacesFromCloudfoundry() {
 
         String org = "8efd7c5c-d83c-4786-b399-b7bd548839e1";
-        String expectedSpaces = "list of spaces returned by cfClient";
+        Collection<CcSpace> expectedSpaces = new ArrayList<CcSpace>() {{new CcSpace();}};
 
-        when(cfClient.getSpaces(any(UUID.class))).thenReturn(expectedSpaces);
+        when(cfClient.getSpaces(any(UUID.class))).thenReturn(Observable.from(expectedSpaces));
 
-        String spaces = sut.getSpaces(org);
+        Collection<CcSpace> spaces = sut.getSpaces(org);
         assertEquals(expectedSpaces, spaces);
 
         verify(cfClient).getSpaces(UUID.fromString(org));

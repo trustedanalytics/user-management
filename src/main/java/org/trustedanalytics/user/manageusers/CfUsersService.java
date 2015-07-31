@@ -30,6 +30,8 @@ import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.invite.rest.InvitationModel;
 
+import rx.Observable;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
@@ -183,8 +185,8 @@ public class CfUsersService implements UsersService {
 
     @Override
     public boolean isSpaceManager(UUID userId, UUID spaceId) {
-        CcSpace space = ccClient.getSpace(spaceId);
-        if(isOrgManager(userId, space.getOrgGuid())) {
+        Observable<CcSpace> space = ccClient.getSpace(spaceId);
+        if(isOrgManager(userId, space.toBlocking().single().getOrgGuid())) {
             return true;
         }
         return ccClient.getSpaceUsers(spaceId, Role.MANAGERS)

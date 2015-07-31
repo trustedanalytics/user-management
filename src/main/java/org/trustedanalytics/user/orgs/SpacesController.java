@@ -51,8 +51,8 @@ public class SpacesController {
     }
 
     @RequestMapping(value = GET_SPACES_OF_ORG_URL, method = GET, produces = APPLICATION_JSON_VALUE)
-    public String getSpaces(@PathVariable String org) {
-        return ccClient.getSpaces(UUID.fromString(org));
+    public Collection<CcSpace> getSpaces(@PathVariable String org) {
+        return ccClient.getSpaces(UUID.fromString(org)).toList().toBlocking().single();
     }
 
     @RequestMapping(value = GET_ALL_SPACES_URL, method = POST, consumes = APPLICATION_JSON_VALUE)

@@ -21,7 +21,7 @@ smtp:
   debug: true
   forbidden_domains: ${vcap.services.smtp.credentials.forbidden_domains:example.com}
   email_name: ${vcap.services.smtp.credentials.email_name:TrustedAnalytics}
-  
+
 web:
   debug: false
 
@@ -30,7 +30,7 @@ app:
    console:
        host: console
        useSsl: true
-  
+
 endpoints.metrics.enabled: true
 
 logging:
