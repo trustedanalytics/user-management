@@ -25,7 +25,7 @@ public class TestUtils {
 
     public static HttpClientErrorException createDummyHttpClientException(UUID userId) {
         String body =
-                "{\"message\":\"Username already in use: gerbszt@wp.pl\",\"error\":\"scim_resource_already_exists\",\"verified\":false,\"active\":true,\"user_id\":\""
+                "{\"message\":\"Username already in use: test@example.com\",\"error\":\"scim_resource_already_exists\",\"verified\":false,\"active\":true,\"user_id\":\""
                         + userId + "\"}";
         HttpClientErrorException exception =
                 new HttpClientErrorException(HttpStatus.CONFLICT, "Conflict", body.getBytes(),

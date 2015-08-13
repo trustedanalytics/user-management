@@ -28,7 +28,7 @@ public class UaaProblemReaderTest {
     public void test_read() {
         UUID userId = UUID.randomUUID();
         HttpClientErrorException exception = TestUtils.createDummyHttpClientException(userId);
-        UaaProblem expectedError = new UaaProblem("Username already in use: gerbszt@wp.pl", "scim_resource_already_exists", userId.toString());
+        UaaProblem expectedError = new UaaProblem("Username already in use: test@example.com", "scim_resource_already_exists", userId.toString());
         Assert.assertThat(UaaProblemReader.read(exception), CoreMatchers.equalTo(expectedError));
     }
 }
