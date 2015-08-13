@@ -1,0 +1,13 @@
+---
+applications:
+- name: user-management
+  memory: 512M
+  instances: 1
+  host: user-management
+  path: target/user-management-${version}.jar
+  services:
+  - security-codes-db
+  - smtp
+  - sso
+  env:
+    SPRING_PROFILES_ACTIVE: "cloud,redis"

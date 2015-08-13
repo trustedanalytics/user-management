@@ -1,0 +1,39 @@
+server:
+  port: 0
+security:
+  ignored: /rest/registrations/*,/rest/registrations,/new-account*,/rest/orgs/**,/rest/spaces/**
+
+oauth:
+  resource: ${vcap.services.sso.credentials.apiEndpoint:https://api.example.com}
+  uaa: ${vcap.services.sso.credentials.uaaUri:https://uaa.example.com}
+
+spring.oauth2:
+  client:
+    userAuthorizationUri: ${vcap.services.sso.credentials.authorizationUri:http://login.run.example.com/oauth/authorize}
+
+smtp:
+  host: ${vcap.services.smtp.credentials.hostname:smtp.example.com}
+  port: ${vcap.services.smtp.credentials.port_ssl:123}
+  email: ${vcap.services.sso.credentials.email:support@example.com}
+  username: ${vcap.services.smtp.credentials.username:SmtpUser}
+  password: ${vcap.services.smtp.credentials.password:SmtpPassword}
+  timeout: 5000
+  debug: true
+  forbidden_domains: ${vcap.services.smtp.credentials.forbidden_domains:example.com}
+  email_name: ${vcap.services.smtp.credentials.email_name:TrustedAnalytics}
+  
+web:
+  debug: false
+
+app:
+   url: ${vcap.application.uris[0]:http://localhost}
+   console:
+       host: console
+       useSsl: true
+  
+endpoints.metrics.enabled: true
+
+logging:
+  level:
+    org.trustedanalytics: DEBUG
+    org.springframework.security: DEBUG
