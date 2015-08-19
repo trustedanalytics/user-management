@@ -32,18 +32,17 @@ public class RedisSecurityCodeService implements SecurityCodeService {
     @Override
     public SecurityCode generateCode(String email) {
         int attempts=3;
-        String codeStr;
 
+        SecurityCode code;
+        boolean added;
         do {
-            codeStr = UUID.randomUUID().toString();
-        } while (hashOps.hasKey(SECURITY_CODES_KEY, codeStr) && --attempts > 0);
+            code = new SecurityCode(email, UUID.randomUUID().toString());
+            added = hashOps.putIfAbsent(SECURITY_CODES_KEY, code.getCode(), code);
+        } while (!added && --attempts > 0);
 
-        if (attempts <= 0) {
+        if (!added) {
             throw new SecurityCodeGenerationException("Security code generating conflict");
         }
-
-        SecurityCode code = new SecurityCode(email, codeStr);
-        hashOps.put(SECURITY_CODES_KEY, code.getCode(), code);
 
         return code;
     }
