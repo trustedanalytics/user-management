@@ -16,7 +16,7 @@
 package org.trustedanalytics.user.manageusers;
 
 import static java.util.Collections.singletonList;
-import static org.springframework.context.annotation.ScopedProxyMode.INTERFACES;
+import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 import static org.springframework.web.context.WebApplicationContext.SCOPE_REQUEST;
 
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
@@ -29,6 +29,7 @@ import org.trustedanalytics.user.invite.EmailOrgUserInvitationService;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.MessageService;
 import org.trustedanalytics.user.invite.OrgUserInvitationService;
+import org.springframework.web.client.RestTemplate;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,7 +37,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.support.InterceptingHttpAccessor;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -54,26 +54,28 @@ public class UsersConfig {
 
     @Autowired
     private AuthTokenRetriever tokenRetriever;
-    
+
     @Bean
+    @Scope(value = SCOPE_REQUEST, proxyMode = TARGET_CLASS)
     protected CcOperations ccPrivilegedClient(RestOperations clientRestTemplate) {
         return new CcClient(clientRestTemplate, apiBaseUrl);
     }
 
     @Bean
+    @Scope(value = SCOPE_REQUEST, proxyMode = TARGET_CLASS)
     protected UaaOperations uaaPrivilegedClient(RestOperations clientRestTemplate) {
         return new UaaClient(clientRestTemplate, uaaBaseUrl);
     }
 
     @Bean
-    @Scope(value = SCOPE_REQUEST, proxyMode = INTERFACES)
-    protected CcOperations ccClient(RestOperations userRestTemplate) {
+    @Scope(value = SCOPE_REQUEST, proxyMode = TARGET_CLASS)
+    protected CcOperations ccClient(RestTemplate userRestTemplate) {
         return new CcClient(setAccessToken(userRestTemplate), apiBaseUrl);
     }
 
     @Bean
-    @Scope(value = SCOPE_REQUEST, proxyMode = INTERFACES)
-    protected UaaOperations uaaClient(RestOperations userRestTemplate) {
+    @Scope(value = SCOPE_REQUEST, proxyMode = TARGET_CLASS)
+    protected UaaOperations uaaClient(RestTemplate userRestTemplate) {
         return new UaaClient(setAccessToken(userRestTemplate), uaaBaseUrl);
     }
 
@@ -86,12 +88,12 @@ public class UsersConfig {
         return (OAuth2Authentication) context.getAuthentication();
     }
 
-    private RestOperations setAccessToken(RestOperations restTemplate) {
+    private RestTemplate setAccessToken(RestTemplate restTemplate) {
         OAuth2Authentication authentication = getAuthentication();
         String token = tokenRetriever.getAuthToken(authentication);
         ClientHttpRequestInterceptor interceptor =
             new HeaderAddingHttpInterceptor("Authorization", "bearer " + token);
-        ((InterceptingHttpAccessor) restTemplate).setInterceptors(singletonList(interceptor));
+        restTemplate.setInterceptors(singletonList(interceptor));
 
         return restTemplate;
     }
