@@ -56,8 +56,8 @@ public class SpacesController {
     }
 
     @RequestMapping(value = GET_ALL_SPACES_URL, method = POST, consumes = APPLICATION_JSON_VALUE)
-    public void createSpace(@RequestBody NewSpaceRequest request) {
-        ccClient.createSpace(request.getOrgGuid(), request.getName());
+    public UUID createSpace(@RequestBody NewSpaceRequest request) {
+        return ccClient.createSpace(request.getOrgGuid(), request.getName());
     }
 
     @RequestMapping(value = GET_ALL_SPACES_URL+"/{space}", method = DELETE)
