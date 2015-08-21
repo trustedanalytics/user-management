@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.trustedanalytics</groupId>
         <artifactId>trustedanalytics-cloud-parent</artifactId>
-        <version>0.4.1</version>
+        <version>0.4.2</version>
     </parent>
 
     <dependencies>
@@ -102,6 +102,10 @@
     <properties>
         <start-class>org.trustedanalytics.user.Application</start-class>
         <java.version>1.8</java.version>
+        <jacoco-measurement-instructions>0.4955</jacoco-measurement-instructions>    
+        <jacoco-measurement-branches>0.3384</jacoco-measurement-branches>           
+        <jacoco-measurement-lines>0.5406</jacoco-measurement-lines>                          
+        <jacoco-measurement-classes>0.7460</jacoco-measurement-classes>                
     </properties>
 
     <build>
@@ -187,30 +191,6 @@
                         <argument>manifest.yml</argument>
                     </arguments>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.jacoco</groupId>
-                <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.4.201502262128</version>
-                <configuration>
-                    <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
-                    <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>jacoco-initialize</id>
-                        <goals>
-                            <goal>prepare-agent</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>jacoco-site</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>report</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <plugin>
             <groupId>com.mycila</groupId>
