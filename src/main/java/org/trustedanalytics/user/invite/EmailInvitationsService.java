@@ -22,8 +22,6 @@ import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring4.SpringTemplateEngine;
@@ -31,7 +29,6 @@ import org.thymeleaf.spring4.SpringTemplateEngine;
 import java.util.UUID;
 
 public class EmailInvitationsService implements InvitationsService {
-    private static final Log LOGGER = LogFactory.getLog(EmailInvitationsService.class);
 
     private final SpringTemplateEngine templateEngine;
 
@@ -66,8 +63,6 @@ public class EmailInvitationsService implements InvitationsService {
         return invitationLink;
 
     }
-
-
 
     private String getEmailHtml(String email, String currentUser, String invitationLink) {
         final Context ctx = new Context();
