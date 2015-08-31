@@ -18,6 +18,8 @@ package org.trustedanalytics.user.invite.config;
 import java.util.Arrays;
 import java.util.Objects;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -25,113 +27,42 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("smtp")
 public class SmtpProperties {
 
+    @Getter @Setter
     private String host;
+
+    @Getter @Setter
     private int port;
+
+    @Getter @Setter
+    private int sslPort;
+
+    @Getter @Setter
     private String email;
+
+    @Getter @Setter
     private String username;
+
+    @Getter @Setter
     private String password;
+
+    @Getter @Setter
     private int timeout;
+
+    @Getter @Setter
     private boolean debug;
+
+    @Getter @Setter
     private String emailName;
-    
-    /**
-     * @return the host
-     */
-    public String getHost() {
-        return host;
-    }
-    /**
-     * @param host the host to set
-     */
-    public void setHost(String host) {
-        this.host = host;
-    }
-    /**
-     * @return the port
-     */
-    public int getPort() {
-        return port;
-    }
-    /**
-     * @param port the port to set
-     */
-    public void setPort(int port) {
-        this.port = port;
-    }
-    /**
-     * @return the username
-     */
-    public String getEmail() {
-        return email;
-    }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
+    @Getter @Setter
+    private boolean useSsl;
 
-    public String getUsername() {
-        return username;
-    }
-    /**
-     * @param username the username to set
-     */
-    public void setUsername(String username) {
-        this.username = username;
-    }
-    /**
-     * @return the password
-     */
-    public String getPassword() {
-        return password;
-    }
-    /**
-     * @param password the password to set
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
-    /**
-     * @return the timeout
-     */
-    public int getTimeout() {
-        return timeout;
-    }
-    /**
-     * @param timeout the timeout to set
-     */
-    public void setTimeout(int timeout) {
-        this.timeout = timeout;
-    }
-    /**
-     * @return the debug
-     */
-    public boolean isDebug() {
-        return debug;
-    }
-    /**
-     * @param debug the debug to set
-     */
-    public void setDebug(boolean debug) {
-        this.debug = debug;
-    }
-    
-    /**
-     * @return the emailName
-     */
-    public String getEmailName() {
-        return emailName;
-    }
-
-    /**
-     * @param emailName the emailName to set
-     */
-    public void setEmailName(String emailName) {
-        this.emailName = emailName;
-    }
+    @Getter @Setter
+    private boolean useAuth;
 
     @Override
     public int hashCode() {
-        return Objects.hash(host, port, username, password, timeout, debug, emailName);
+        return Objects.hash(host, port, username, password, timeout, debug, emailName, sslPort, useSsl, useAuth);
     }
     
     @Override
@@ -145,6 +76,9 @@ public class SmtpProperties {
             other = (SmtpProperties) obj;
             return allTrue(Objects.equals(host, other.host),
                    Objects.equals(port, other.port),
+                   Objects.equals(sslPort, other.sslPort),
+                   Objects.equals(useSsl, other.useSsl),
+                   Objects.equals(useAuth, other.useAuth),
                    Objects.equals(username, other.username),
                    Objects.equals(password, other.password),
                    Objects.equals(timeout, other.timeout),

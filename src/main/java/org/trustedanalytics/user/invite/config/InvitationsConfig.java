@@ -19,6 +19,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Properties;
 
+import com.google.common.base.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -40,27 +41,32 @@ public class InvitationsConfig {
 
     @Autowired
     private SmtpProperties smtpProperties;
-    
+
     @Bean(name="emailService")
     protected EmailService emailService() throws UnsupportedEncodingException{
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
+        if(smtpProperties.isUseSsl()) {
+            sender.setPort(smtpProperties.getSslPort());
+            sender.setProtocol("smtps");
+        }
+        else {
+            sender.setPort(smtpProperties.getPort());
+            sender.setProtocol("smtp");
+        }
         sender.setHost(smtpProperties.getHost());
-        sender.setPort(smtpProperties.getPort());
         sender.setUsername(smtpProperties.getUsername());
         sender.setPassword(smtpProperties.getPassword());
-        
+
         Properties mailProps = new Properties();
-        mailProps.setProperty("mail.smtps.auth", "true");
-        mailProps.setProperty("mail.smtps.ssl.enable", "true");
+        mailProps.setProperty("mail.smtps.auth", Boolean.toString(smtpProperties.isUseAuth()));
+        mailProps.setProperty("mail.smtps.ssl.enable",  Boolean.toString(smtpProperties.isUseSsl()));
         mailProps.setProperty("mail.smtps.connectiontimeout", Integer.toString(smtpProperties.getTimeout()));
 
-        sender.setProtocol("smtps");
-        
         if (smtpProperties.isDebug()) {
             mailProps.setProperty("mail.debug", "true");
             System.setProperty("mail.socket.debug", "true");
         }
-        
+
         sender.setJavaMailProperties(mailProps);
         
         return new EmailService(sender, smtpProperties.getEmail(), smtpProperties.getEmailName());
