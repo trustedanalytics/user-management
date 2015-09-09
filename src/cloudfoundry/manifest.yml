@@ -1,7 +1,7 @@
 ---
 applications:
 - name: user-management
-  memory: 512M
+  memory: 1G
   instances: 1
   host: user-management
   path: target/user-management-${version}.jar
@@ -11,3 +11,4 @@ applications:
   - sso
   env:
     SPRING_PROFILES_ACTIVE: "cloud,redis"
+    JBP_CONFIG_OPEN_JDK_JRE: '[memory_sizes: {metaspace: 128m..}]'
