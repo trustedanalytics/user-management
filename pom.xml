@@ -10,6 +10,11 @@
     </parent>
     <dependencies>
         <dependency>
+            <groupId>org.trustedanalytics</groupId>
+            <artifactId>rest-error-handling</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.cloudfoundry</groupId>
             <artifactId>cloudfoundry-client-lib</artifactId>
             <version>1.0.5</version>

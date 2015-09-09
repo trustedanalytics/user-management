@@ -15,6 +15,11 @@
  */
 package org.trustedanalytics.user.common;
 
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
+
+import org.trustedanalytics.utils.errorhandling.ErrorFormatter;
+import org.trustedanalytics.utils.errorhandling.RestErrorHandler;
+
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
@@ -24,13 +29,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.client.HttpStatusCodeException;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.servlet.http.HttpServletResponse;
 
 @ControllerAdvice
@@ -38,22 +42,50 @@ public class WebErrorHandlers {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebErrorHandlers.class);
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public void badRequest(Exception e) {
-        LOGGER.error(HttpStatus.BAD_REQUEST.getReasonPhrase(), e);
+    public void badRequest(Exception e, HttpServletResponse response) throws IOException {
+        logAndSendErrorResponse(response, BAD_REQUEST, e);
     }
 
     @ExceptionHandler(HttpStatusCodeException.class)
-    public void handleHttpStatusCodeException(HttpStatusCodeException e,
-        HttpServletResponse response) throws IOException {
+    public void handleHttpStatusCodeException(
+            HttpStatusCodeException e,
+            HttpServletResponse response) throws IOException {
         String message = extractErrorFromJSON(e.getResponseBodyAsString());
         message = StringUtils.isNotBlank(message) ? message : e.getMessage();
-        LOGGER.error(message, e);
-        response.sendError(e.getStatusCode().value(), message);
+        logAndSendErrorResponse(response, e.getStatusCode(), message, e);
     }
 
-    private String extractErrorFromJSON(String json){
+    @ExceptionHandler(Exception.class)
+    public void handleException(Exception e, HttpServletResponse response) throws Exception {
+        RestErrorHandler defaultErrorHandler = new RestErrorHandler();
+        defaultErrorHandler.handleException(e, response);
+    }
+
+    private static long generateErrorId() {
+        return new Date().getTime();
+    }
+
+    private static void logAndSendErrorResponse(
+            HttpServletResponse response,
+            HttpStatus status,
+            Exception ex) throws IOException {
+        logAndSendErrorResponse(response, status, status.getReasonPhrase(), ex);
+    }
+
+    private static void logAndSendErrorResponse(
+            HttpServletResponse response,
+            HttpStatus status,
+            String reason,
+            Exception ex) throws IOException {
+        long errorId = generateErrorId();
+        String errorMessage = ErrorFormatter.formatErrorMessage(reason, errorId);
+
+        LOGGER.error(errorMessage, ex);
+        response.sendError(status.value(), errorMessage);
+    }
+
+    private static String extractErrorFromJSON(String json){
         Map<String, String> map = new HashMap<>();
         try {
             ObjectMapper mapper = new ObjectMapper();
