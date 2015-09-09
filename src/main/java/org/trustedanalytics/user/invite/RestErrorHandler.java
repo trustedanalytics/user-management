@@ -19,12 +19,16 @@ import org.trustedanalytics.user.invite.rest.EntityAlreadyExists;
 import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 import org.trustedanalytics.user.invite.securitycode.InvalidSecurityCodeException;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-@ControllerAdvice public class RestErrorHandler {
+@ControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class RestErrorHandler {
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(InvalidSecurityCodeException.class)

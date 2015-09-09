@@ -25,6 +25,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -38,6 +40,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 @ControllerAdvice
+@Order(Ordered.LOWEST_PRECEDENCE)
 public class WebErrorHandlers {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WebErrorHandlers.class);
