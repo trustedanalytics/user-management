@@ -18,6 +18,7 @@ package org.trustedanalytics.user.manageusers;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ObjectArrays;
+
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
@@ -28,6 +29,7 @@ import org.trustedanalytics.user.invite.AngularInvitationLinkGenerator;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
+import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 import org.trustedanalytics.user.invite.rest.InvitationModel;
 
 import rx.Observable;
@@ -160,6 +162,10 @@ public class CfUsersService implements UsersService {
 
     @Override
     public void deleteUserFromOrg(UUID userGuid, UUID orgGuid) {
+        if (ccClient.getUserOrgs(userGuid).stream().noneMatch(x -> orgGuid.equals(x.getGuid()))) {
+            throw new EntityNotFoundException("The user is not in given organization", null);
+        }
+
         Role.SPACE_ROLES
             .stream()
             .forEach(role -> ccClient.getUsersSpaces(userGuid, role, orgGuid)

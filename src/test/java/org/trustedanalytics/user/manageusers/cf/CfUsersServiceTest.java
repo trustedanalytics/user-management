@@ -27,6 +27,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.trustedanalytics.cloud.cc.api.CcOperations;
+import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
@@ -40,7 +41,6 @@ import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.manageusers.CfUsersService;
 import org.trustedanalytics.user.manageusers.PasswordGenerator;
 import org.trustedanalytics.user.manageusers.UserRequest;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -174,6 +174,7 @@ public class CfUsersServiceTest {
         when(ccClient.getUsersSpaces(userGuid, Role.MANAGERS, orgGuid)).thenReturn(managedSpaces);
         when(ccClient.getUsersSpaces(userGuid, Role.AUDITORS, orgGuid)).thenReturn(auditedSpaces);
         when(ccClient.getUsersSpaces(userGuid, Role.DEVELOPERS, orgGuid)).thenReturn(spaces);
+        when(ccClient.getUserOrgs(userGuid)).thenReturn(Collections.singletonList(new CcOrg(orgGuid, "testorg")));
 
         CfUsersService cfUsersService =
                 new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
