@@ -28,6 +28,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.thymeleaf.spring4.SpringTemplateEngine;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
+import org.trustedanalytics.user.common.SpaceUserRolesValidator;
 import org.trustedanalytics.user.invite.EmailInvitationsService;
 import org.trustedanalytics.user.invite.EmailService;
 import org.trustedanalytics.user.invite.InvitationsService;
@@ -80,5 +81,10 @@ public class InvitationsConfig {
     @Bean
     protected BlacklistEmailValidator emailValidator(){
         return new BlacklistEmailValidator(forbiddenDomains);
+    }
+
+    @Bean
+    protected SpaceUserRolesValidator spaceRolesValidator(){
+        return new SpaceUserRolesValidator();
     }
 }

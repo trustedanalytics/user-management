@@ -15,6 +15,7 @@
  */
 package org.trustedanalytics.user.invite;
 
+import org.trustedanalytics.user.common.WrongUserRolesException;
 import org.trustedanalytics.user.invite.rest.EntityAlreadyExists;
 import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 import org.trustedanalytics.user.invite.securitycode.InvalidSecurityCodeException;
@@ -32,23 +33,27 @@ import java.io.IOException;
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RestErrorHandler {
+    //It is a way to specify HTTP status as a response to particular exception
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(InvalidSecurityCodeException.class)
     public void incorrectSocurityCode() {
-        //It is a way to specify HTTP status as a response to particular exception
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(EntityAlreadyExists.class)
     public void entityAlreadyExists() {
-        //It is a way to specify HTTP status as a response to particular exception
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound() {
-        //It is a way to specify HTTP status as a response to particular exception
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(WrongUserRolesException.class)
+    public void incorrectRoles(Exception e, HttpServletResponse response) throws IOException {
+        response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)

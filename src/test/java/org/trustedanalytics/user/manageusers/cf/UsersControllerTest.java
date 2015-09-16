@@ -15,11 +15,15 @@
  */
 package org.trustedanalytics.user.manageusers.cf;
 
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
+import org.trustedanalytics.user.common.SpaceUserRolesValidator;
+import org.trustedanalytics.user.common.WrongUserRolesException;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.invite.config.AccessTokenDetails;
 import org.trustedanalytics.user.manageusers.UserRequest;
@@ -34,11 +38,14 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UsersControllerTest {
     private UsersController sut;
+    private UserRequest req;
 
     @Mock
     private UsersService usersService;
@@ -51,11 +58,14 @@ public class UsersControllerTest {
     @Mock
     private BlacklistEmailValidator emailValidator;
 
+    private SpaceUserRolesValidator spaceRolesValidator = new SpaceUserRolesValidator();
+
     @Before
     public void setup() {
-        sut = new UsersController(usersService, priviledgedUsersService, detailsFinder, emailValidator);
+        sut = new UsersController(usersService, priviledgedUsersService, detailsFinder, emailValidator, spaceRolesValidator);
         AccessTokenDetails details = new AccessTokenDetails(UUID.randomUUID());
         when(userAuthentication.getDetails()).thenReturn(details);
+        req = new UserRequest();
     }
 
     @Test
@@ -94,7 +104,6 @@ public class UsersControllerTest {
         UUID userId = UUID.randomUUID();
         OAuth2Authentication auth = new OAuth2Authentication(null, userAuthentication);
 
-        UserRequest req = new UserRequest();
         when(detailsFinder.findUserId(auth)).thenReturn(userId);
         when(detailsFinder.findUserName(auth)).thenReturn("admin_test");
         when(usersService.isOrgManager(userId, orgId)).thenReturn(false);
@@ -111,7 +120,6 @@ public class UsersControllerTest {
         UUID userId = UUID.randomUUID();
         OAuth2Authentication auth = new OAuth2Authentication(null, userAuthentication);
 
-        UserRequest req = new UserRequest();
         when(detailsFinder.findUserId(auth)).thenReturn(userId);
         when(usersService.isOrgManager(userId, orgId)).thenReturn(false);
         sut.deleteUserFromOrg(orgId, userId, auth);
@@ -119,5 +127,22 @@ public class UsersControllerTest {
         verify(usersService).isOrgManager(userId, orgId);
         verify(usersService, times(1)).deleteUserFromOrg(userId, orgId);
         verify(priviledgedUsersService, times(0)).deleteUserFromOrg(userId, orgId);
+    }
+
+    @Test(expected = WrongUserRolesException.class)
+    public void createSpaceUser_ByNonManager_PriviledgedServiceNotUsed_EmptyRole() {
+        UUID spaceId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
+        OAuth2Authentication auth = new OAuth2Authentication(null, userAuthentication);
+
+        req.setRoles(new ArrayList<>());
+        when(detailsFinder.findUserId(auth)).thenReturn(userId);
+        when(detailsFinder.findUserName(auth)).thenReturn("admin_test");
+
+        sut.createSpaceUser(req, spaceId, auth);
+
+        verify(usersService).isSpaceManager(userId, spaceId);
+        verify(usersService, times(1)).addSpaceUser(req, spaceId, "admin_test");
+        verify(priviledgedUsersService, times(0)).addSpaceUser(req, spaceId, "admin_test");
     }
 }

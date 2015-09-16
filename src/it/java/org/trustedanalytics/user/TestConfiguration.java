@@ -32,6 +32,7 @@ import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.spring4.SpringTemplateEngine;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
+import org.trustedanalytics.user.common.SpaceUserRolesValidator;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.invite.EmailInvitationsService;
 import org.trustedanalytics.user.invite.EmailService;
@@ -150,5 +151,10 @@ public class TestConfiguration {
     @Bean
     protected BlacklistEmailValidator emailValidator() {
         return mock(BlacklistEmailValidator.class);
+    }
+
+    @Bean
+    protected SpaceUserRolesValidator spaceRolesValidator() {
+        return mock(SpaceUserRolesValidator.class);
     }
 }

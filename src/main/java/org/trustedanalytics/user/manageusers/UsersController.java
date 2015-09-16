@@ -23,6 +23,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
+import org.trustedanalytics.user.common.SpaceUserRolesValidator;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,14 +46,16 @@ public class UsersController {
     private final UsersService priviledgedUsersService;
     private final UserDetailsFinder detailsFinder;
     private final BlacklistEmailValidator emailValidator;
+    private final SpaceUserRolesValidator spaceRolesValidator;
     
     @Autowired
     public UsersController(UsersService usersService, UsersService priviledgedUsersService,
-        UserDetailsFinder detailsFinder, BlacklistEmailValidator emailValidator) {
+        UserDetailsFinder detailsFinder, BlacklistEmailValidator emailValidator, SpaceUserRolesValidator spaceRolesValidator) {
         this.usersService = usersService;
         this.priviledgedUsersService = priviledgedUsersService;
         this.detailsFinder = detailsFinder;
         this.emailValidator = emailValidator;
+        this.spaceRolesValidator = spaceRolesValidator;
     }
 
     enum AuthorizationScope {
@@ -98,6 +101,7 @@ public class UsersController {
     public User createSpaceUser(@RequestBody UserRequest userRequest, @PathVariable UUID space, Authentication auth) {
         String currentUser = detailsFinder.findUserName(auth);
         emailValidator.validate(userRequest.getUsername());
+        spaceRolesValidator.validate(userRequest.getRoles());
         return determinePriviledgeLevel(auth, AuthorizationScope.SPACE, space)
             .addSpaceUser(userRequest, space, currentUser);
     }
