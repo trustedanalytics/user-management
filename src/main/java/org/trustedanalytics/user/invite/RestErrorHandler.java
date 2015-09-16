@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RestErrorHandler {
@@ -46,5 +49,12 @@ public class RestErrorHandler {
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound() {
         //It is a way to specify HTTP status as a response to particular exception
+    }
+
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(WrongEmailAddressException.class)
+    public void wrongEmailAddress(Exception e, HttpServletResponse response) throws IOException {
+        //It is a way to specify HTTP status as a response to particular exception
+        response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
     }
 }
