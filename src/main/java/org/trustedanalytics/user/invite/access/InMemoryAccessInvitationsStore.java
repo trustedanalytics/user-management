@@ -13,17 +13,31 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite;
+package org.trustedanalytics.user.invite.access;
 
-import com.google.common.base.Strings;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+import java.util.HashMap;
+import java.util.Map;
 
-public class SpringInvitationLinkGenerator implements InvitationLinkGenerator {
+public class InMemoryAccessInvitationsStore implements AccessInvitationsStore {
+    final private Map<String, AccessInvitations> invitationsMap = new HashMap<String, AccessInvitations>();
+
     @Override
-    public String getLink(String code) {
-        assert Strings.isNullOrEmpty(code);
-        return ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/invitations/accept").build().toUriString()
-                + "?code="+code;
+    public boolean hasKey(String key) {
+        return invitationsMap.containsKey(key);
+    }
+
+    @Override
+    public AccessInvitations get(String key) {
+        return invitationsMap.get(key);
+    }
+
+    @Override
+    public void remove(String key) {
+        invitationsMap.remove(key);
+    }
+
+    @Override
+    public void put(String key, AccessInvitations invitations) {
+        invitationsMap.put(key, invitations);
     }
 }

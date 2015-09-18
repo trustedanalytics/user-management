@@ -39,6 +39,7 @@ import org.trustedanalytics.user.invite.EmailService;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.MessageService;
 import org.trustedanalytics.user.invite.SecurityDisabler;
+import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 
 @Configuration
@@ -157,4 +158,10 @@ public class TestConfiguration {
     protected SpaceUserRolesValidator spaceRolesValidator() {
         return mock(SpaceUserRolesValidator.class);
     }
+
+    @Bean
+    protected AccessInvitations accessInvitations() {
+        return mock(AccessInvitations.class);
+    }
+
 }

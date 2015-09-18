@@ -61,12 +61,7 @@ public class RegistrationsController {
         String email = sc.getEmail();
 
         try {
-            if (!accessInvitationsService.getOrgCreationEligibility(email)) {
-                invitationsService.createUser(email, newUser.getPassword());
-            } else {
-                invitationsService.createUser(email, newUser.getPassword(), newUser.getOrg());
-            }
-
+            invitationsService.createUser(email, newUser.getPassword(), newUser.getOrg());
             securityCodeService.use(sc);
             accessInvitationsService.useAccessInvitations(email);
 
@@ -82,11 +77,8 @@ public class RegistrationsController {
     @RequestMapping(value = "/{code}", method = RequestMethod.GET)
     public InvitationModel getInvitation(@PathVariable("code") String code) {
         try {
-            SecurityCode sc = securityCodeService.verify(code);
-            InvitationModel invitation = new InvitationModel();
-            invitation.setEmail(sc.getEmail());
-            invitation.setEligibleToCreateOrg(accessInvitationsService.getOrgCreationEligibility(sc.getEmail()));
-            return invitation;
+            final SecurityCode sc = securityCodeService.verify(code);
+            return InvitationModel.of(sc.getEmail(), accessInvitationsService.getOrgCreationEligibility(sc.getEmail()));
         } catch(InvalidSecurityCodeException e) {
             throw new EntityNotFoundException("", e);
         }

@@ -15,18 +15,92 @@
  */
 package org.trustedanalytics.user.invite.access;
 
-import java.util.List;
+import com.google.common.base.Strings;
+import org.trustedanalytics.cloud.cc.api.manageusers.Role;
+
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
-public interface AccessInvitationsService {
+public class AccessInvitationsService {
+    public static enum CreateOrUpdateState {
+        CREATED,
+        UPDATED
+    }
 
-    List<UUID> getAccessInvitations(String email, AccessInvitations.AccessInvitationsType type);
+    private final AccessInvitationsStore store;
 
-    void addAccessInvitation(String email, UUID uuid, AccessInvitations.AccessInvitationsType type);
+    public AccessInvitationsService(AccessInvitationsStore store){
+        this.store = store;
+    }
 
-    void useAccessInvitations(String email);
+    public Optional<AccessInvitations> getAccessInvitations(String email) {
+        validateStringArgument(email);
+        return Optional.ofNullable(store.get(email));
+    }
 
-    boolean getOrgCreationEligibility(String email);
+    public boolean getOrgCreationEligibility(String email) {
+        validateStringArgument(email);
+        return store.hasKey(email) && store.get(email).isEligibleToCreateOrg();
+    }
 
-    void addEligibilityToCreateOrg(String email);
+    public void addEligibilityToCreateOrg(String email) {
+        validateStringArgument(email);
+        AccessInvitations userInvitations;
+
+        if (store.hasKey(email)) {
+            userInvitations = store.get(email);
+            userInvitations.setEligibleToCreateOrg(true);
+        } else {
+            userInvitations = new AccessInvitations(true);
+        }
+        store.put(email, userInvitations);
+    }
+
+    public void updateAccessInvitation(String email, AccessInvitations invitations) {
+        validateStringArgument(email);
+        store.put(email, invitations);
+    }
+
+    public void useAccessInvitations(String email) {
+        validateStringArgument(email);
+        store.remove(email);
+    }
+
+    public CreateOrUpdateState createOrUpdateInvitation(String email, Consumer<AccessInvitations> consumer) {
+        validateStringArgument(email);
+        AccessInvitations userInvitations;
+        CreateOrUpdateState state;
+
+        if (store.hasKey(email)) {
+            userInvitations = store.get( email);
+            state = CreateOrUpdateState.UPDATED;
+        } else {
+            userInvitations = new AccessInvitations(false);
+            state = CreateOrUpdateState.CREATED;
+        }
+
+        consumer.accept(userInvitations);
+        store.put(email, userInvitations);
+        return state;
+    }
+
+    private void validateStringArgument(String arg) {
+        if(Strings.isNullOrEmpty(arg)) {
+            throw new IllegalArgumentException("String argument is null or empty");
+        }
+    }
+
+    private void validateUUID(UUID id) {
+        if (id == null) {
+            throw new IllegalArgumentException("UUID cannot be null");
+        }
+    }
+
+    private void validateRoles(Set<Role> roles) {
+        if (roles == null || roles.isEmpty()) {
+            throw new IllegalArgumentException("At leas one role needs to be provided");
+        }
+    }
 }

@@ -15,12 +15,14 @@
  */
 package org.trustedanalytics.user.manageusers.cf;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
+import org.trustedanalytics.cloud.cc.api.manageusers.User;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
 import org.trustedanalytics.user.common.SpaceUserRolesValidator;
 import org.trustedanalytics.user.common.WrongUserRolesException;
@@ -40,6 +42,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RunWith(MockitoJUnitRunner.class)
@@ -107,6 +110,7 @@ public class UsersControllerTest {
         when(detailsFinder.findUserId(auth)).thenReturn(userId);
         when(detailsFinder.findUserName(auth)).thenReturn("admin_test");
         when(usersService.isOrgManager(userId, orgId)).thenReturn(false);
+        when(usersService.addOrgUser(any(), any(), any())).thenReturn(Optional.<User>empty());
         sut.createOrgUser(req, orgId, auth);
 
         verify(usersService).isOrgManager(userId, orgId);

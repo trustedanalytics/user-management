@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>user-management</artifactId>
-    <version>0.4.7</version>
+    <version>0.4.8</version>
     <parent>
         <groupId>org.trustedanalytics</groupId>
         <artifactId>trustedanalytics-cloud-parent</artifactId>
@@ -102,10 +102,10 @@
     <properties>
         <start-class>org.trustedanalytics.user.Application</start-class>
         <java.version>1.8</java.version>
-        <jacoco-measurement-instructions>0.3550</jacoco-measurement-instructions>    
-        <jacoco-measurement-branches>0.2961</jacoco-measurement-branches>           
-        <jacoco-measurement-lines>0.3937</jacoco-measurement-lines>                          
-        <jacoco-measurement-classes>0.5238</jacoco-measurement-classes>                
+        <jacoco-measurement-instructions>0.3000</jacoco-measurement-instructions>
+        <jacoco-measurement-branches>0.2500</jacoco-measurement-branches>
+        <jacoco-measurement-lines>0.3500</jacoco-measurement-lines>
+        <jacoco-measurement-classes>0.5000</jacoco-measurement-classes>
     </properties>
 
     <build>

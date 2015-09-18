@@ -15,31 +15,16 @@
  */
 package org.trustedanalytics.user.invite.rest;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * Created by GER\sbultrow on 11/21/14
  */
 public class RegistrationModel {
+    @Getter @Setter
     private String password;
 
+    @Getter @Setter
     private String org;
-
-    public RegistrationModel() {
-    }
-
-    public String getOrg() {
-        return org;
-    }
-
-    public void setOrg(String org) {
-        this.org = org;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
 }

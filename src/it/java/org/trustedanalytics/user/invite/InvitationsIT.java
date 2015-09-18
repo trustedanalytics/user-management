@@ -15,14 +15,12 @@
  */
 package org.trustedanalytics.user.invite;
 
+import static org.mockito.Matchers.*;
 import static org.trustedanalytics.user.orgs.RestOperationsHelpers.postForEntityWithToken;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyObject;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,6 +30,7 @@ import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUserFactory;
 import org.trustedanalytics.user.Application;
 import org.trustedanalytics.user.TestConfiguration;
 import org.trustedanalytics.user.current.UserDetailsFinder;
+import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.invite.rest.InvitationModel;
 import org.trustedanalytics.user.invite.rest.RegistrationModel;
@@ -61,6 +60,7 @@ import org.trustedanalytics.user.orgs.RestOperationsHelpers;
 
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.mail.Address;
@@ -103,6 +103,9 @@ public class InvitationsIT {
     @Autowired
     private UserDetailsFinder detailsFinder;
 
+    @Autowired
+    private AccessInvitations accessInvitations;
+
     private TestRestTemplate restTemplate;
 
     private static final String USER = "user";
@@ -125,8 +128,7 @@ public class InvitationsIT {
         MockitoAnnotations.initMocks(this);
         when(detailsFinder.findUserName(any(Authentication.class))).thenReturn(USER);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
-        InvitationModel invitation = new InvitationModel();
-        invitation.setEmail(INVITATION_MAIL);
+        InvitationModel invitation = InvitationModel.of(INVITATION_MAIL, false);
 
         ResponseEntity<String> response =
             postForEntityWithToken(restTemplate, TOKEN, baseUrl + "rest/invitations", invitation,
@@ -185,8 +187,9 @@ public class InvitationsIT {
                     eq(String.class)))
             .thenReturn(getCfCreateJSONExpectedResponse(spaceGuidString));
 
-        when(accessInvitationsService.getOrgCreationEligibility(any(String.class))).thenReturn(true);
 
+        when(accessInvitations.isEligibleToCreateOrg()).thenReturn(true);
+        when(accessInvitationsService.getAccessInvitations(anyString())).thenReturn(Optional.of(accessInvitations));
         ResponseEntity<String> response =
             restTemplate.getForEntity(baseUrl + "rest/registrations/{code}", String.class, code);
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));

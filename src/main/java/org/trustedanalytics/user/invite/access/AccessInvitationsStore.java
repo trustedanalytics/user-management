@@ -13,11 +13,16 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite;
+package org.trustedanalytics.user.invite.access;
 
-import java.util.Optional;
+import java.util.Set;
 
-public interface InvitationsService {
-    String sendInviteEmail(String email, String currentUser, InvitationLinkGenerator invitationLinkGenerator);
-    Optional<String> createUser(String username, String password, String orgName);
+public interface AccessInvitationsStore {
+    boolean hasKey(String key);
+
+    AccessInvitations get(String key);
+
+    void remove(String key);
+
+    void put(String key, AccessInvitations invitations);
 }

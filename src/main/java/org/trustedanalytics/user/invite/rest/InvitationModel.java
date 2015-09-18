@@ -15,15 +15,25 @@
  */
 package org.trustedanalytics.user.invite.rest;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
 public class InvitationModel {
 
-    @Getter @Setter
+    @Getter @Setter(value= AccessLevel.PRIVATE)
     private String email;
 
-    @Getter @Setter
+    @Getter @Setter(value= AccessLevel.PRIVATE)
     private boolean eligibleToCreateOrg;
+
+    private InvitationModel() {}
+
+    public static InvitationModel of(String email, boolean eligibleToCreateOrg) {
+        InvitationModel im = new InvitationModel();
+        im.setEmail(email);
+        im.setEligibleToCreateOrg(eligibleToCreateOrg);
+        return im;
+    }
 
 }

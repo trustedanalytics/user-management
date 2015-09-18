@@ -15,7 +15,10 @@
  */
 package org.trustedanalytics.user.invite;
 
-import org.trustedanalytics.cloud.cc.api.CcOperationsOrgsSpaces;
+import com.google.common.base.Strings;
+import org.apache.commons.lang3.tuple.Pair;
+import org.trustedanalytics.cloud.cc.api.CcOperations;
+import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.user.invite.access.AccessInvitations;
@@ -26,7 +29,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring4.SpringTemplateEngine;
 
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class EmailInvitationsService implements InvitationsService {
 
@@ -45,7 +53,7 @@ public class EmailInvitationsService implements InvitationsService {
     private UaaOperations uaaPrivilegedClient;
 
     @Autowired
-    private CcOperationsOrgsSpaces ccPrivilegedClient;
+    private CcOperations ccPrivilegedClient;
 
     public EmailInvitationsService(SpringTemplateEngine templateEngine) {
         this.templateEngine = templateEngine;
@@ -74,44 +82,40 @@ public class EmailInvitationsService implements InvitationsService {
     }
 
     @Override
-    public String createUser(String username, String password, String orgName) {
+    public Optional<String> createUser(String username, String password, String orgName) {
+        return accessInvitationsService.getAccessInvitations(username)
+            .map(invitations -> {
+                final ScimUser user = uaaPrivilegedClient.createUser(username, password);
+                final UUID userGuid = UUID.fromString(user.getId());
+                ccPrivilegedClient.createUser(userGuid);
+                if (!Strings.isNullOrEmpty(orgName)) {
+                    createOrganizationAndSpace(userGuid, orgName);
+                }
+                retrieveAndAssignAccessInvitations(userGuid, invitations);
+                return user.getId();
+            });
+    }
+
+    private void createOrganizationAndSpace(UUID userGuid, String orgName) {
         final String defaultSpaceName = "default";
-
-        ScimUser user = uaaPrivilegedClient.createUser(username, password);
-        UUID userGuid = UUID.fromString(user.getId());
-
-        ccPrivilegedClient.createUser(userGuid);
-        UUID orgGuid = ccPrivilegedClient.createOrganization(orgName);
+        final UUID orgGuid = ccPrivilegedClient.createOrganization(orgName);
         ccPrivilegedClient.assignUserToOrganization(userGuid, orgGuid);
-        UUID spaceGuid = ccPrivilegedClient.createSpace(orgGuid, defaultSpaceName);
+        final UUID spaceGuid = ccPrivilegedClient.createSpace(orgGuid, defaultSpaceName);
         ccPrivilegedClient.assignUserToSpace(userGuid, spaceGuid);
-
-        retrieveAndAssignAccessInvitations(username, userGuid);
-
-        return user.getId();
     }
 
-    @Override
-    public String createUser(String username, String password) {
-
-        ScimUser user = uaaPrivilegedClient.createUser(username, password);
-        UUID userGuid = UUID.fromString(user.getId());
-
-        ccPrivilegedClient.createUser(userGuid);
-
-        retrieveAndAssignAccessInvitations(username, userGuid);
-
-        return user.getId();
+    private void retrieveAndAssignAccessInvitations(UUID userGuid, AccessInvitations invtiations) {
+        getFlatOrgRoleMap(invtiations.getOrgAccessInvitations())
+                .forEach(pair -> ccPrivilegedClient.assignOrgRole(userGuid, pair.getKey(), pair.getValue()));
+        getFlatOrgRoleMap(invtiations.getSpaceAccessInvitations())
+                .forEach(pair -> ccPrivilegedClient.assignSpaceRole(userGuid, pair.getKey(), pair.getValue()));
     }
 
-    private void retrieveAndAssignAccessInvitations(String username, UUID userGuid) {
-
-        for (UUID org : accessInvitationsService.getAccessInvitations(username, AccessInvitations.AccessInvitationsType.ORG)) {
-            ccPrivilegedClient.assignUserToOrganization(userGuid, org);
-        }
-
-        for (UUID space : accessInvitationsService.getAccessInvitations(username, AccessInvitations.AccessInvitationsType.SPACE)) {
-            ccPrivilegedClient.assignUserToSpace(userGuid, space);
-        }
+    private List<Pair<UUID, Role>> getFlatOrgRoleMap(Map<UUID, Set<Role>> orgRoleMap) {
+        return orgRoleMap.entrySet()
+                .stream()
+                .flatMap(orgRoles -> orgRoles.getValue().stream().map(role -> Pair.of(orgRoles.getKey(), role)))
+                .collect(Collectors.toList());
     }
+
 }

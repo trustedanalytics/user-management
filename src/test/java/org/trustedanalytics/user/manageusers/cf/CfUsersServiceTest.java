@@ -26,6 +26,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Lists;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
@@ -86,9 +87,9 @@ public class CfUsersServiceTest {
 
         CfUsersService cfUsersService =
                 new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
-        User resultUser = cfUsersService.addOrgUser(cfCreateUser, orgGuid, "admin_test");
+        Optional<User> resultUser = cfUsersService.addOrgUser(cfCreateUser, orgGuid, "admin_test");
         //user was not created, invitation was sent
-        assertThat(resultUser, equalTo(null));
+        assertFalse(resultUser.isPresent());
 
         verify(uaaOperations, never()).createUser(eq(expectedUser.getUsername()), eq(password));
         verify(ccClient, never()).assignOrgRole(eq(expectedUser.getGuid()), eq(orgGuid), eq(roles.get(0)));
@@ -115,8 +116,8 @@ public class CfUsersServiceTest {
         when(uaaOperations.createUser(expectedUser.getUsername(), password)).thenReturn(scimUser);
         CfUsersService cfUsersService =
                 new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
-        User resultUser = cfUsersService.addOrgUser(cfCreateUser, orgGuid, "admin_test");
-        assertThat(resultUser, equalTo(expectedUser));
+        Optional<User> resultUser = cfUsersService.addOrgUser(cfCreateUser, orgGuid, "admin_test");
+        assertThat(resultUser.get(), equalTo(expectedUser));
 
         verify(ccClient).assignOrgRole(eq(userGuid), eq(orgGuid), eq(roles.get(0)));
     }
@@ -191,4 +192,106 @@ public class CfUsersServiceTest {
         verify(uaaOperations, never()).createUser(any(), any());
     }
 
+    @Test
+    public void testAddSpaceUser_userDoesntExist_sendInvitation() {
+        UUID orgGuid = UUID.randomUUID();
+        UUID spaceGuid = UUID.randomUUID();
+        String username = "czeslaw@example.com";
+        String currentUsername = "kazimierz@example.com";
+        when(uaaOperations.findUserIdByName(eq(username))).thenReturn(Optional.<UserIdNamePair>empty());
+        when(accessInvitationsService.createOrUpdateInvitation(eq(username), any())).thenReturn(AccessInvitationsService.CreateOrUpdateState.CREATED);
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+
+        UserRequest ur = new UserRequest();
+        ur.setOrgGuid(orgGuid.toString());
+        ur.setRoles(Lists.newArrayList(Role.DEVELOPERS));
+        ur.setUsername(username);
+        Optional<User> result = cfUsersService.addSpaceUser(ur, spaceGuid, currentUsername);
+
+        assertFalse(result.isPresent());
+        verify(accessInvitationsService).createOrUpdateInvitation(eq(username), any());
+        verify(invitationService).sendInviteEmail(eq(username), eq(currentUsername), any());
+    }
+
+    @Test
+    public void testAddSpaceUser_userDoesExist_sendInvitation() {
+        UUID orgGuid = UUID.randomUUID();
+        UUID spaceGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+        String username = "czeslaw@example.com";
+        String currentUsername = "kazimierz@example.com";
+        UserIdNamePair pair = new UserIdNamePair();
+        pair.setGuid(userGuid);
+        pair.setUserName(username);
+
+        when(uaaOperations.findUserIdByName(eq(username))).thenReturn(Optional.of(pair));
+        when(accessInvitationsService.createOrUpdateInvitation(eq(username), any())).thenReturn(AccessInvitationsService.CreateOrUpdateState.UPDATED);
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+
+        UserRequest ur = new UserRequest();
+        ur.setOrgGuid(orgGuid.toString());
+        ur.setRoles(Lists.newArrayList(Role.DEVELOPERS));
+        ur.setUsername(username);
+        Optional<User> result = cfUsersService.addSpaceUser(ur, spaceGuid, currentUsername);
+
+        assertTrue(result.isPresent());
+        verify(accessInvitationsService, never()).createOrUpdateInvitation(eq(username), any());
+        verify(invitationService, never()).sendInviteEmail(eq(username), eq(currentUsername), any());
+        verify(ccClient).assignOrgRole(any(), eq(orgGuid), eq(Role.USERS));
+        verify(ccClient).assignSpaceRole(any(), eq(spaceGuid), eq(Role.DEVELOPERS));
+    }
+
+    @Test
+    public void testAddOrgUser_userDoesntExist_sendInvitation() {
+        UUID orgGuid = UUID.randomUUID();
+        String username = "czeslaw@example.com";
+        String currentUsername = "kazimierz@example.com";
+        when(uaaOperations.findUserIdByName(eq(username))).thenReturn(Optional.<UserIdNamePair>empty());
+        when(accessInvitationsService.createOrUpdateInvitation(eq(username), any())).thenReturn(AccessInvitationsService.CreateOrUpdateState.CREATED);
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+
+        UserRequest ur = new UserRequest();
+        ur.setOrgGuid(orgGuid.toString());
+        ur.setRoles(Lists.newArrayList(Role.MANAGERS));
+        ur.setUsername(username);
+        Optional<User> result = cfUsersService.addOrgUser(ur, orgGuid, currentUsername);
+
+        assertFalse(result.isPresent());
+        verify(accessInvitationsService).createOrUpdateInvitation(eq(username), any());
+        verify(invitationService).sendInviteEmail(eq(username), eq(currentUsername), any());
+    }
+
+    @Test
+    public void testAddOrgUser_userDoesExist_sendInvitation() {
+        UUID orgGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+        String username = "czeslaw@example.com";
+        String currentUsername = "kazimierz@example.com";
+        UserIdNamePair pair = new UserIdNamePair();
+        pair.setGuid(userGuid);
+        pair.setUserName(username);
+
+        when(uaaOperations.findUserIdByName(eq(username))).thenReturn(Optional.of(pair));
+        when(accessInvitationsService.createOrUpdateInvitation(eq(username), any())).thenReturn(AccessInvitationsService.CreateOrUpdateState.UPDATED);
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+
+        UserRequest ur = new UserRequest();
+        ur.setOrgGuid(orgGuid.toString());
+        ur.setRoles(Lists.newArrayList(Role.BILLING_MANAGERS));
+        ur.setUsername(username);
+        Optional<User> result = cfUsersService.addOrgUser(ur, orgGuid, currentUsername);
+
+        assertTrue(result.isPresent());
+        verify(accessInvitationsService, never()).createOrUpdateInvitation(eq(username), any());
+        verify(invitationService, never()).sendInviteEmail(eq(username), eq(currentUsername), any());
+        verify(ccClient).assignOrgRole(any(), eq(orgGuid), eq(Role.BILLING_MANAGERS));
+    }
 }

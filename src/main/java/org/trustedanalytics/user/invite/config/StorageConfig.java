@@ -15,10 +15,12 @@
  */
 package org.trustedanalytics.user.invite.config;
 
+import org.springframework.data.redis.connection.RedisServer;
 import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
-import org.trustedanalytics.user.invite.access.InMemoryAccessInvitationsService;
-import org.trustedanalytics.user.invite.access.RedisAccessInvitationsService;
+import org.trustedanalytics.user.invite.access.AccessInvitationsStore;
+import org.trustedanalytics.user.invite.access.InMemoryAccessInvitationsStore;
+import org.trustedanalytics.user.invite.access.RedisAccessInvitationsStore;
 import org.trustedanalytics.user.invite.securitycode.InMemorySecurityCodeService;
 import org.trustedanalytics.user.invite.securitycode.RedisSecurityCodeService;
 import org.trustedanalytics.user.invite.securitycode.SecurityCode;
@@ -49,8 +51,13 @@ public class StorageConfig {
         }
 
         @Bean
-        AccessInvitationsService inMemoryAccessInvitationsService() {
-            return new InMemoryAccessInvitationsService();
+        AccessInvitationsStore inMemoryAccessInvitationsStore() {
+            return new InMemoryAccessInvitationsStore();
+        }
+
+        @Bean
+        AccessInvitationsService inMemoryAccessInvitationsService(AccessInvitationsStore inMemoryAccessInvitationsStore) {
+            return new AccessInvitationsService(inMemoryAccessInvitationsStore);
         }
     }
 
@@ -65,19 +72,8 @@ public class StorageConfig {
 
         @Bean
         public RedisOperations<String, SecurityCode> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-            RedisTemplate<String, SecurityCode> template = new RedisTemplate<String, SecurityCode>();
-
-            template.setConnectionFactory(redisConnectionFactory);
-
-            RedisSerializer<String> stringSerializer = new StringRedisSerializer();
-            RedisSerializer<SecurityCode> albumSerializer = new JacksonJsonRedisSerializer<SecurityCode>(SecurityCode.class);
-
-            template.setKeySerializer(stringSerializer);
-            template.setValueSerializer(albumSerializer);
-            template.setHashKeySerializer(stringSerializer);
-            template.setHashValueSerializer(albumSerializer);
-
-            return template;
+            return CommonConfiguration.redisTemplate(redisConnectionFactory,
+                    new JacksonJsonRedisSerializer<SecurityCode>(SecurityCode.class));
         }
     }
 
@@ -85,25 +81,35 @@ public class StorageConfig {
     @Configuration
     public static class RedisInvitationStorageConfig {
         @Bean
-        public AccessInvitationsService redisAccessInvitationsService(
-                RedisOperations<String, AccessInvitations> redisTemplate) {
-            return new RedisAccessInvitationsService(redisTemplate);
+        public AccessInvitationsStore redisAccessInvitationsStore(
+                RedisOperations<String, AccessInvitations> redisAccessInvitationsTemplate) {
+            return new RedisAccessInvitationsStore(redisAccessInvitationsTemplate);
+        }
+
+        @Bean
+        AccessInvitationsService redisAccessInvitationsService(AccessInvitationsStore redisAccessInvitationsStore) {
+            return new AccessInvitationsService(redisAccessInvitationsStore);
         }
 
         @Bean
         public RedisOperations<String, AccessInvitations> redisAccessInvitationsTemplate(
                 RedisConnectionFactory redisConnectionFactory) {
-            RedisTemplate<String, AccessInvitations> template = new RedisTemplate<String, AccessInvitations>();
+            return CommonConfiguration.redisTemplate(redisConnectionFactory,
+                    new JacksonJsonRedisSerializer<AccessInvitations>(AccessInvitations.class));
+        }
+    }
+
+    private static class CommonConfiguration {
+        private static <T> RedisOperations<String, T>
+            redisTemplate(RedisConnectionFactory redisConnectionFactory, RedisSerializer<T> valueSerializer) {
+            RedisTemplate<String, T> template = new RedisTemplate<String, T>();
             template.setConnectionFactory(redisConnectionFactory);
 
-            RedisSerializer<String> emailSerializer = new StringRedisSerializer();
-            RedisSerializer<AccessInvitations> accessSerializer =
-                    new JacksonJsonRedisSerializer<AccessInvitations>(AccessInvitations.class);
-
-            template.setKeySerializer(emailSerializer);
-            template.setValueSerializer(accessSerializer);
-            template.setHashKeySerializer(emailSerializer);
-            template.setHashValueSerializer(accessSerializer);
+            RedisSerializer<String> stringSerializer = new StringRedisSerializer();
+            template.setKeySerializer(stringSerializer);
+            template.setValueSerializer(valueSerializer);
+            template.setHashKeySerializer(stringSerializer);
+            template.setHashValueSerializer(valueSerializer);
 
             return template;
         }

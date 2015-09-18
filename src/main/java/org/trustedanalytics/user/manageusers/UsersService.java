@@ -20,6 +20,7 @@ import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
 
 import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface UsersService {
@@ -27,9 +28,9 @@ public interface UsersService {
 
     Collection<User> getSpaceUsers(UUID spaceGuid);
 
-    User addOrgUser(UserRequest userRequest, UUID org, String currentUser);
+    Optional<User> addOrgUser(UserRequest userRequest, UUID org, String currentUser);
     
-    User addSpaceUser(UserRequest userRequest, UUID spaceGuid, String currentUser);
+    Optional<User> addSpaceUser(UserRequest userRequest, UUID spaceGuid, String currentUser);
     
     void deleteUser(UUID guid);
     

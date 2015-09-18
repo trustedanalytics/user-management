@@ -17,7 +17,9 @@ package org.trustedanalytics.user.manageusers;
 
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
+import com.google.common.collect.Sets;
 
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
@@ -76,50 +78,55 @@ public class CfUsersService implements UsersService {
     }
 
     @Override
-    public User addOrgUser(UserRequest userRequest, UUID orgGuid, String currentUser) {
-        UUID userGuid = retrieveOrInviteUser(userRequest.getUsername(), currentUser, null, orgGuid);
-        if (userGuid != null) {
-            Role[] roles = ObjectArrays
-                    .concat(userRequest.getRoles().toArray(new Role[] {}), Role.USERS);
-            assignOrgRolesToUser(userGuid, orgGuid, roles);
-
-            return new User(userRequest.getUsername(), userGuid, userRequest.getRoles(), orgGuid);
+    public Optional<User> addOrgUser(UserRequest userRequest, UUID orgGuid, String currentUser) {
+        Optional<UserIdNamePair> idNamePair = uaaClient.findUserIdByName(userRequest.getUsername());
+        if(!idNamePair.isPresent()) {
+            inviteUserToOrg(userRequest.getUsername(), currentUser, orgGuid, Sets.immutableEnumSet(userRequest.getRoles()));
         }
-        return null;
+
+        return idNamePair.map(pair -> {
+            UUID userGuid = pair.getGuid();
+            Role[] roles = ObjectArrays
+                    .concat(userRequest.getRoles().toArray(new Role[]{}), Role.USERS);
+            assignOrgRolesToUser(userGuid, orgGuid, roles);
+            return new User(userRequest.getUsername(), userGuid, userRequest.getRoles(), orgGuid);
+        });
     }
 
     @Override
-    public User addSpaceUser(UserRequest userRequest, UUID spaceGuid, String currentUser) {
+    public Optional<User> addSpaceUser(UserRequest userRequest, UUID spaceGuid, String currentUser) {
         UUID orgGuid = UUID.fromString(userRequest.getOrgGuid());
-        UUID userGuid = retrieveOrInviteUser(userRequest.getUsername(), currentUser,
-                UUID.fromString(userRequest.getOrgGuid()), spaceGuid);
-        if (userGuid != null) {
+        Optional<UserIdNamePair> idNamePair = uaaClient.findUserIdByName(userRequest.getUsername());
+        if (!idNamePair.isPresent()) {
+            inviteUserToSpace(userRequest.getUsername(), currentUser, orgGuid, spaceGuid, Sets.immutableEnumSet(userRequest.getRoles()));
+        }
+        return idNamePair.map(pair -> {
+            UUID userGuid = pair.getGuid();
             assignOrgRolesToUser(userGuid, orgGuid, Role.USERS);
-
             assignSpaceRolesToUser(userGuid, spaceGuid,
                     userRequest.getRoles().stream().toArray(Role[]::new));
-
             return new User(userRequest.getUsername(), userGuid, userRequest.getRoles(), orgGuid);
-        }
-        return null;
+        });
     }
 
-    private UUID retrieveOrInviteUser(String username, String currentUser, UUID space, UUID org) {
-        Optional<UserIdNamePair> idNamePair = uaaClient.findUserIdByName(username);
-        return idNamePair.isPresent() ? idNamePair.get().getGuid() : inviteUser(username, currentUser, space, org);
+    private void inviteUserToOrg(String username, String currentUser, UUID orgGuid, Set<Role> roles) {
+
+        AccessInvitationsService.CreateOrUpdateState state =
+                accessInvitationsService.createOrUpdateInvitation(username, ui -> ui.addOrgAccessInvitation(orgGuid, roles));
+        if (state == AccessInvitationsService.CreateOrUpdateState.CREATED) {
+            invitationsService.sendInviteEmail(username, currentUser, new AngularInvitationLinkGenerator());
+        }
     }
 
-    private UUID inviteUser(String username, String currentUser, UUID spaceGuid, UUID orgGuid) {
-        InvitationModel invitation = new InvitationModel();
-        invitation.setEmail(username);
-        invitation.setEligibleToCreateOrg(false);
-
-        if (spaceGuid != null) {
-            accessInvitationsService.addAccessInvitation(username, spaceGuid, AccessInvitations.AccessInvitationsType.SPACE);
+    private void inviteUserToSpace(String username, String currentUser, UUID orgGuid, UUID spaceGuid, Set<Role> roles) {
+        AccessInvitationsService.CreateOrUpdateState state =
+                accessInvitationsService.createOrUpdateInvitation(username, ui -> {
+            ui.addOrgAccessInvitation(orgGuid, Sets.immutableEnumSet(Role.USERS));
+            ui.addSpaceAccessInvitation(spaceGuid, roles);
+        });
+        if (state == AccessInvitationsService.CreateOrUpdateState.CREATED) {
+            invitationsService.sendInviteEmail(username, currentUser, new AngularInvitationLinkGenerator());
         }
-        accessInvitationsService.addAccessInvitation(username, orgGuid, AccessInvitations.AccessInvitationsType.ORG);
-        invitationsService.sendInviteEmail(invitation.getEmail(), currentUser, new AngularInvitationLinkGenerator());
-        return null;
     }
 
     @Override

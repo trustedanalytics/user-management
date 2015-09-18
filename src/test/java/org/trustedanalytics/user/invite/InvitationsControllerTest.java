@@ -66,9 +66,7 @@ public class InvitationsControllerTest {
 
     @Test
     public void testAddInvitation_sendInvitationEmail() {
-        InvitationModel invitation = new InvitationModel();
-        invitation.setEligibleToCreateOrg(true);
-        invitation.setEmail(USER_EMAIL);
+        InvitationModel invitation = InvitationModel.of(USER_EMAIL, true);
         doReturn(ADMIN_EMAIL).when(detailsFinder).findUserName(any(Authentication.class));
         sut.addInvitation(invitation, null);
 

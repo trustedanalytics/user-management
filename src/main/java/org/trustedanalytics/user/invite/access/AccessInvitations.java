@@ -17,42 +17,42 @@ package org.trustedanalytics.user.invite.access;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
-public class AccessInvitations {
 
-    public enum AccessInvitationsType {
-        ORG,
-        SPACE
-    }
+public class AccessInvitations {
 
     @Getter @Setter
     private boolean eligibleToCreateOrg;
 
     @Getter
-    private List<UUID> orgAccessInvitations;
+    private Map<UUID, Set<Role>> orgAccessInvitations;
 
     @Getter
-    private List<UUID> spaceAccessInvitations;
+    private Map<UUID, Set<Role>> spaceAccessInvitations;
+
 
     public AccessInvitations() {
+        //Empty constructor is required by Redis Serializer to properly deserialize object
     }
 
     public AccessInvitations(boolean eligibleToCreateOrg) {
         this.eligibleToCreateOrg = eligibleToCreateOrg;
-        this.orgAccessInvitations = new LinkedList<>();
-        this.spaceAccessInvitations = new LinkedList<>();
+        this.orgAccessInvitations = new HashMap<>();
+        this.spaceAccessInvitations = new HashMap<>();
     }
 
-    public void addOrgAccessInvitation(UUID uuid) {
-        this.orgAccessInvitations.add(uuid);
+    public void addOrgAccessInvitation(UUID uuid, Set<Role> roles) {
+        this.orgAccessInvitations.put(uuid, roles);
     }
 
-    public void addSpaceAccessInvitation(UUID uuid) {
-        this.spaceAccessInvitations.add(uuid);
+    public void addSpaceAccessInvitation(UUID uuid, Set<Role> roles) {
+        this.spaceAccessInvitations.put(uuid, roles);
     }
 
     public void clearAccessInvitations() {

@@ -41,6 +41,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
 
+import java.util.List;
+
 @RunWith(MockitoJUnitRunner.class)
 public class RegistrationsControllerTest {
 
@@ -111,7 +113,7 @@ public class RegistrationsControllerTest {
         RegistrationModel registration = new RegistrationModel();
         registration.setPassword("123456");
         doThrow(new HttpClientErrorException(HttpStatus.CONFLICT)).when(invitationsService).createUser(
-                Matchers.anyString(), Matchers.anyString());
+                Matchers.anyString(), Matchers.anyString(), Matchers.any());
 
         sut.addUser(registration, SECURITY_CODE);
     }
@@ -137,7 +139,7 @@ public class RegistrationsControllerTest {
         RegistrationModel registration = new RegistrationModel();
         registration.setPassword("123456");
         doThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(invitationsService).createUser(
-                Matchers.anyString(), Matchers.anyString());
+                Matchers.anyString(), Matchers.anyString(), Matchers.any());
 
         sut.addUser(registration, SECURITY_CODE);
     }

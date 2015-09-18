@@ -93,7 +93,7 @@ public class UsersController {
         String currentUser = detailsFinder.findUserName(auth);
         emailValidator.validate(userRequest.getUsername());
         return determinePriviledgeLevel(auth, AuthorizationScope.ORG, org)
-            .addOrgUser(userRequest, org, currentUser);
+            .addOrgUser(userRequest, org, currentUser).orElse(null);
     }
 
     @RequestMapping(value = SPACE_USERS_URL, method = POST,
@@ -103,7 +103,7 @@ public class UsersController {
         emailValidator.validate(userRequest.getUsername());
         spaceRolesValidator.validate(userRequest.getRoles());
         return determinePriviledgeLevel(auth, AuthorizationScope.SPACE, space)
-            .addSpaceUser(userRequest, space, currentUser);
+            .addSpaceUser(userRequest, space, currentUser).orElse(null);
     }
 
     @RequestMapping(value = ORG_USERS_URL+"/{user}", method = PUT,
