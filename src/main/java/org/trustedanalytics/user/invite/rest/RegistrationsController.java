@@ -54,8 +54,7 @@ public class RegistrationsController {
 
     @RequestMapping(method = RequestMethod.POST)
     public RegistrationModel addUser(@RequestBody RegistrationModel newUser,
-                                     @RequestParam(value = "code", required = false) String code,
-                                     HttpServletResponse response) {
+                                     @RequestParam(value = "code", required = false) String code) {
         if(Strings.isNullOrEmpty(code)) {
             throw new InvalidSecurityCodeException("Security code empty or null");
         }

@@ -24,6 +24,7 @@ import org.trustedanalytics.user.invite.securitycode.InvalidSecurityCodeExceptio
 import org.trustedanalytics.user.invite.securitycode.SecurityCode;
 import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
 
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -92,28 +93,29 @@ public class RegistrationsControllerTest {
         sut.addUser(new RegistrationModel(), SECURITY_CODE);
     }
 
-    @Test(expected = EntityAlreadyExistsException.class)
-    public void testAddUser_createUserAlreadyExists_throwEntityAlreadyExists() {
+    @Test(expected = UserExistsException.class)
+    public void testAddUser_createUserAlreadyExists_throwUserExistsException() {
         SecurityCode sc = new SecurityCode(USER_EMAIL, SECURITY_CODE);
         doReturn(sc).when(securityCodeService).verify(Matchers.anyString());
         RegistrationModel registration = new RegistrationModel();
         registration.setPassword("123456");
         registration.setOrg("abcdefgh");
         doReturn(true).when(accessInvitationsService).getOrgCreationEligibility(Matchers.anyString());
-        doThrow(new HttpClientErrorException(HttpStatus.CONFLICT)).when(invitationsService).createUser(
-                Matchers.anyString(), Matchers.anyString(), Matchers.anyString());
+
+        doThrow(new UserExistsException("")).when(invitationsService).createUser(
+                Matchers.anyString(), Matchers.anyString(), any());
 
         sut.addUser(registration, SECURITY_CODE);
     }
 
-    @Test(expected = EntityAlreadyExistsException.class)
-    public void testAddUser_createUserAlreadyExistsNoOrg_throwEntityAlreadyExists() {
+    @Test(expected = OrgExistsException.class)
+    public void testAddUser_createUserAlreadyExistsNoOrg_throwOrgExistsException() {
         SecurityCode sc = new SecurityCode(USER_EMAIL, SECURITY_CODE);
         doReturn(sc).when(securityCodeService).verify(Matchers.anyString());
         RegistrationModel registration = new RegistrationModel();
         registration.setPassword("123456");
-        doThrow(new HttpClientErrorException(HttpStatus.CONFLICT)).when(invitationsService).createUser(
-                Matchers.anyString(), Matchers.anyString(), Matchers.any());
+        doThrow(new OrgExistsException("")).when(invitationsService).createUser(
+                Matchers.anyString(), Matchers.anyString(), any());
 
         sut.addUser(registration, SECURITY_CODE);
     }
@@ -139,7 +141,7 @@ public class RegistrationsControllerTest {
         RegistrationModel registration = new RegistrationModel();
         registration.setPassword("123456");
         doThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(invitationsService).createUser(
-                Matchers.anyString(), Matchers.anyString(), Matchers.any());
+                Matchers.anyString(), Matchers.anyString(), any());
 
         sut.addUser(registration, SECURITY_CODE);
     }

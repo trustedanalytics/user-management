@@ -164,4 +164,7 @@ public class TestConfiguration {
         return mock(AccessInvitations.class);
     }
 
+    public static String getUaaGetUser(String username) {
+        return uaaBaseUrl + "/Users?attributes=id,userName&filter=userName eq '{name}'";
+    }
 }

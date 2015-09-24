@@ -24,7 +24,10 @@ import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import org.hamcrest.CoreMatchers;
+import org.trustedanalytics.cloud.uaa.UserIdNameList;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUserFactory;
 import org.trustedanalytics.user.Application;
@@ -48,6 +51,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.IntegrationTest;
 import org.springframework.boot.test.SpringApplicationConfiguration;
 import org.springframework.boot.test.TestRestTemplate;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -57,7 +62,8 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.client.RestOperations;
 import org.trustedanalytics.user.orgs.RestOperationsHelpers;
-
+import org.trustedanalytics.cloud.cc.api.CcOrg;
+import org.trustedanalytics.cloud.cc.api.Page;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Optional;
@@ -68,6 +74,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+
 
 @ActiveProfiles("in-memory")
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -178,8 +185,22 @@ public class InvitationsIT {
                 eq(ScimUser.class)))
             .thenReturn(new ScimUser(userGuidString, username, null, null));
 
+
+        Page<CcOrg> page1 = new Page<CcOrg>();
+        page1.setResources(Lists.newArrayList());
+
         when(clientRestTemplate
-            .postForObject(eq(TestConfiguration.getCreateOrgUrl()), anyObject(), eq(String.class)))
+               .exchange(Matchers.eq(TestConfiguration.getCreateOrgUrl()), eq(HttpMethod.GET), any(), eq(new ParameterizedTypeReference<Page<CcOrg>>() {
+               })))
+               .thenReturn(new ResponseEntity<Page<CcOrg>>(page1, HttpStatus.OK));
+
+        UserIdNameList userList = new UserIdNameList();
+        userList.setUsers(Lists.newArrayList());
+        when(clientRestTemplate.getForObject(eq(TestConfiguration.getUaaGetUser(username)), eq(UserIdNameList.class), eq(ImmutableMap.of("name", username))))
+                .thenReturn(userList);
+
+        when(clientRestTemplate
+                .postForObject(eq(TestConfiguration.getCreateOrgUrl()), anyObject(), eq(String.class)))
             .thenReturn(getCfCreateJSONExpectedResponse(orgGuidString));
 
         when(clientRestTemplate
