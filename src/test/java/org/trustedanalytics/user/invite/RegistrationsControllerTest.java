@@ -15,7 +15,7 @@
  */
 package org.trustedanalytics.user.invite;
 
-import org.trustedanalytics.user.invite.rest.EntityAlreadyExists;
+import org.trustedanalytics.user.invite.rest.EntityAlreadyExistsException;
 import org.trustedanalytics.user.invite.rest.InvitationModel;
 import org.trustedanalytics.user.invite.rest.RegistrationModel;
 import org.trustedanalytics.user.invite.rest.RegistrationsController;
@@ -92,7 +92,7 @@ public class RegistrationsControllerTest {
         sut.addUser(new RegistrationModel(), SECURITY_CODE);
     }
 
-    @Test(expected = EntityAlreadyExists.class)
+    @Test(expected = EntityAlreadyExistsException.class)
     public void testAddUser_createUserAlreadyExists_throwEntityAlreadyExists() {
         SecurityCode sc = new SecurityCode(USER_EMAIL, SECURITY_CODE);
         doReturn(sc).when(securityCodeService).verify(Matchers.anyString());
@@ -106,7 +106,7 @@ public class RegistrationsControllerTest {
         sut.addUser(registration, SECURITY_CODE);
     }
 
-    @Test(expected = EntityAlreadyExists.class)
+    @Test(expected = EntityAlreadyExistsException.class)
     public void testAddUser_createUserAlreadyExistsNoOrg_throwEntityAlreadyExists() {
         SecurityCode sc = new SecurityCode(USER_EMAIL, SECURITY_CODE);
         doReturn(sc).when(securityCodeService).verify(Matchers.anyString());

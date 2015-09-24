@@ -15,8 +15,9 @@
  */
 package org.trustedanalytics.user.invite;
 
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.trustedanalytics.user.common.WrongUserRolesException;
-import org.trustedanalytics.user.invite.rest.EntityAlreadyExists;
+import org.trustedanalytics.user.invite.rest.EntityAlreadyExistsException;
 import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 import org.trustedanalytics.user.invite.securitycode.InvalidSecurityCodeException;
 
@@ -40,9 +41,19 @@ public class RestErrorHandler {
     public void incorrectSocurityCode() {
     }
 
+
+    @ResponseBody
     @ResponseStatus(HttpStatus.CONFLICT)
-    @ExceptionHandler(EntityAlreadyExists.class)
-    public void entityAlreadyExists() {
+    @ExceptionHandler(UserExistsException.class)
+    public UserConflictResponse userExists(UserExistsException e) throws IOException {
+        return UserConflictResponse.of(UserConflictResponse.ConflictedField.USER , e.getMessage());
+    }
+
+    @ResponseBody
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(OrgExistsException.class)
+    public UserConflictResponse orgExists(OrgExistsException e) throws IOException {
+        return UserConflictResponse.of(UserConflictResponse.ConflictedField.ORG, e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)

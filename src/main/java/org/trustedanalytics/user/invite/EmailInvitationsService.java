@@ -17,6 +17,8 @@ package org.trustedanalytics.user.invite;
 
 import com.google.common.base.Strings;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
@@ -28,6 +30,8 @@ import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring4.SpringTemplateEngine;
+import rx.Observable;
+import rx.Subscription;
 
 import java.util.List;
 import java.util.Map;
@@ -37,6 +41,8 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class EmailInvitationsService implements InvitationsService {
+
+    private static final Log LOGGER = LogFactory.getLog(EmailInvitationsService.class);
 
     private final SpringTemplateEngine templateEngine;
 
@@ -68,6 +74,7 @@ public class EmailInvitationsService implements InvitationsService {
                 invitationLinkGenerator.getLink(securityCodeService.generateCode(email).getCode());
         String htmlContent = getEmailHtml(email, currentUser, invitationLink);
         messageService.sendMimeMessage(email, subject, htmlContent);
+        LOGGER.info("Sent invitation to user " + email);
         return invitationLink;
 
     }
@@ -82,7 +89,11 @@ public class EmailInvitationsService implements InvitationsService {
     }
 
     @Override
-    public Optional<String> createUser(String username, String password, String orgName) {
+    public Optional<String> createUser(String username, String password, String orgName)
+            throws OrgExistsException, UserExistsException {
+        validateOrgName(orgName);
+        validateUsername(username);
+
         return accessInvitationsService.getAccessInvitations(username)
             .map(invitations -> {
                 final ScimUser user = uaaPrivilegedClient.createUser(username, password);
@@ -94,6 +105,24 @@ public class EmailInvitationsService implements InvitationsService {
                 retrieveAndAssignAccessInvitations(userGuid, invitations);
                 return user.getId();
             });
+    }
+
+    private void validateUsername(String username) {
+        uaaPrivilegedClient.findUserIdByName(username).ifPresent(user -> {
+            throw new UserExistsException(String.format("Username %s is already taken", user));
+        });
+    }
+
+    private void validateOrgName(String orgName) {
+        ccPrivilegedClient.getOrgs()
+            .exists(org -> org.getName().equals(orgName))
+            .doOnNext(orgExists -> {
+                if (orgExists) {
+                    throw new OrgExistsException(String.format("Organization \"%s\" already exists.", orgName));
+                }
+            })
+            .toBlocking()
+            .single();
     }
 
     private void createOrganizationAndSpace(UUID userGuid, String orgName) {

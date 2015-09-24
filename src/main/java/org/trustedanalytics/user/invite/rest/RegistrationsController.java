@@ -16,6 +16,7 @@
 package org.trustedanalytics.user.invite.rest;
 
 import org.trustedanalytics.user.invite.InvitationsService;
+import org.trustedanalytics.user.invite.OrgExistsException;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.invite.securitycode.InvalidSecurityCodeException;
 import org.trustedanalytics.user.invite.securitycode.SecurityCode;
@@ -31,6 +32,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.HttpClientErrorException;
+
+import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/rest/registrations")
@@ -50,7 +53,9 @@ public class RegistrationsController {
     }
 
     @RequestMapping(method = RequestMethod.POST)
-    public RegistrationModel addUser(@RequestBody RegistrationModel newUser, @RequestParam(value = "code", required = false) String code) {
+    public RegistrationModel addUser(@RequestBody RegistrationModel newUser,
+                                     @RequestParam(value = "code", required = false) String code,
+                                     HttpServletResponse response) {
         if(Strings.isNullOrEmpty(code)) {
             throw new InvalidSecurityCodeException("Security code empty or null");
         }
@@ -60,17 +65,9 @@ public class RegistrationsController {
 
         String email = sc.getEmail();
 
-        try {
-            invitationsService.createUser(email, newUser.getPassword(), newUser.getOrg());
-            securityCodeService.use(sc);
-            accessInvitationsService.useAccessInvitations(email);
-
-        } catch(HttpClientErrorException e) {
-            if(e.getStatusCode() == HttpStatus.CONFLICT) {
-                throw new EntityAlreadyExists();
-            }
-            throw e;
-        }
+        invitationsService.createUser(email, newUser.getPassword(), newUser.getOrg());
+        securityCodeService.use(sc);
+        accessInvitationsService.useAccessInvitations(email);
         return newUser;
     }
 
