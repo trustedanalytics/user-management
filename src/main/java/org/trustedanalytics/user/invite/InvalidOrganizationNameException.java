@@ -15,11 +15,8 @@
  */
 package org.trustedanalytics.user.invite;
 
-import java.util.Optional;
-import java.util.UUID;
-
-public interface InvitationsService {
-    String sendInviteEmail(String email, String currentUser, InvitationLinkGenerator invitationLinkGenerator);
-    Optional<UUID> createUser(String username, String password, String orgName);
-    Optional<UUID> createUser(String username, String password);
+public class InvalidOrganizationNameException extends RuntimeException {
+    public InvalidOrganizationNameException(String message) {
+        super(message);
+    }
 }

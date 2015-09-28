@@ -16,6 +16,7 @@
 package org.trustedanalytics.user.invite;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -89,31 +90,47 @@ public class EmailInvitationsService implements InvitationsService {
     }
 
     @Override
-    public Optional<String> createUser(String username, String password, String orgName)
-            throws OrgExistsException, UserExistsException {
+    public Optional<UUID> createUser(String username, String password, String orgName)
+            throws OrgExistsException, UserExistsException, InvalidOrganizationNameException {
         validateOrgName(orgName);
         validateUsername(username);
 
+        Optional<UUID> resultGuid = createAndRetrieveUser(username, password);
+        resultGuid.ifPresent(userGuid -> {
+            createOrganizationAndSpace(resultGuid.get(), orgName);
+        });
+
+        return resultGuid;
+    }
+
+    @Override
+    public Optional<UUID> createUser(String username, String password) throws UserExistsException {
+        validateUsername(username);
+        return createAndRetrieveUser(username, password);
+    }
+
+    private Optional<UUID> createAndRetrieveUser(String username, String password) {
         return accessInvitationsService.getAccessInvitations(username)
-            .map(invitations -> {
-                final ScimUser user = uaaPrivilegedClient.createUser(username, password);
-                final UUID userGuid = UUID.fromString(user.getId());
-                ccPrivilegedClient.createUser(userGuid);
-                if (!Strings.isNullOrEmpty(orgName)) {
-                    createOrganizationAndSpace(userGuid, orgName);
-                }
-                retrieveAndAssignAccessInvitations(userGuid, invitations);
-                return user.getId();
-            });
+                .map(invitations -> {
+                    final ScimUser user = uaaPrivilegedClient.createUser(username, password);
+                    final UUID userGuid = UUID.fromString(user.getId());
+                    ccPrivilegedClient.createUser(userGuid);
+                    retrieveAndAssignAccessInvitations(userGuid, invitations);
+                    return userGuid;
+                });
     }
 
     private void validateUsername(String username) {
         uaaPrivilegedClient.findUserIdByName(username).ifPresent(user -> {
-            throw new UserExistsException(String.format("Username %s is already taken", user));
+            throw new UserExistsException(String.format("Username %s is already taken", username));
         });
     }
 
     private void validateOrgName(String orgName) {
+        if(StringUtils.isBlank(orgName)) {
+            throw new InvalidOrganizationNameException("Organization cannot contain only whitespace characters");
+        }
+
         ccPrivilegedClient.getOrgs()
             .exists(org -> org.getName().equals(orgName))
             .doOnNext(orgExists -> {

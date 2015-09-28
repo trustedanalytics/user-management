@@ -45,8 +45,8 @@ public class RegistrationsController {
 
     @Autowired
     public RegistrationsController(SecurityCodeService securityCodeService,
-                            InvitationsService invitationsService,
-                            AccessInvitationsService accessInvitationsService) {
+                                   InvitationsService invitationsService,
+                                   AccessInvitationsService accessInvitationsService) {
         this.securityCodeService = securityCodeService;
         this.invitationsService = invitationsService;
         this.accessInvitationsService = accessInvitationsService;
@@ -55,7 +55,7 @@ public class RegistrationsController {
     @RequestMapping(method = RequestMethod.POST)
     public RegistrationModel addUser(@RequestBody RegistrationModel newUser,
                                      @RequestParam(value = "code", required = false) String code) {
-        if(Strings.isNullOrEmpty(code)) {
+        if (Strings.isNullOrEmpty(code)) {
             throw new InvalidSecurityCodeException("Security code empty or null");
         }
 
@@ -63,8 +63,12 @@ public class RegistrationsController {
         validate(newUser);
 
         String email = sc.getEmail();
-
-        invitationsService.createUser(email, newUser.getPassword(), newUser.getOrg());
+        if (accessInvitationsService.getOrgCreationEligibility(email)) {
+            invitationsService.createUser(email, newUser.getPassword(), newUser.getOrg());
+        }
+        else {
+            invitationsService.createUser(email, newUser.getPassword());
+        }
         securityCodeService.use(sc);
         accessInvitationsService.useAccessInvitations(email);
         return newUser;
@@ -75,13 +79,13 @@ public class RegistrationsController {
         try {
             final SecurityCode sc = securityCodeService.verify(code);
             return InvitationModel.of(sc.getEmail(), accessInvitationsService.getOrgCreationEligibility(sc.getEmail()));
-        } catch(InvalidSecurityCodeException e) {
+        } catch (InvalidSecurityCodeException e) {
             throw new EntityNotFoundException("", e);
         }
     }
 
     private void validate(RegistrationModel user) {
-        if(Strings.nullToEmpty(user.getPassword()).length() < 6) {
+        if (Strings.nullToEmpty(user.getPassword()).length() < 6) {
             throw new IllegalArgumentException("Password is too short");
         }
     }

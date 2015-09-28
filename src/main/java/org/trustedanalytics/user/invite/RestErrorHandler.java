@@ -56,6 +56,13 @@ public class RestErrorHandler {
         return UserConflictResponse.of(UserConflictResponse.ConflictedField.ORG, e.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(InvalidOrganizationNameException.class)
+    public void invalidOrgName(InvalidOrganizationNameException e, HttpServletResponse response)
+            throws IOException {
+        response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+    }
+
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound() {

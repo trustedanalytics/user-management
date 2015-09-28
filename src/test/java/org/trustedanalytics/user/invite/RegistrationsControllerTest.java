@@ -114,6 +114,7 @@ public class RegistrationsControllerTest {
         doReturn(sc).when(securityCodeService).verify(Matchers.anyString());
         RegistrationModel registration = new RegistrationModel();
         registration.setPassword("123456");
+        doReturn(true).when(accessInvitationsService).getOrgCreationEligibility(Matchers.anyString());
         doThrow(new OrgExistsException("")).when(invitationsService).createUser(
                 Matchers.anyString(), Matchers.anyString(), any());
 
@@ -134,13 +135,14 @@ public class RegistrationsControllerTest {
         sut.addUser(registration, SECURITY_CODE);
     }
 
-    @Test(expected = HttpClientErrorException.class)
+    @Test(expected = InvalidOrganizationNameException.class)
     public void testAddUser_createUserNoOrgHttpConnectionError_throwHttpError() {
         SecurityCode sc = new SecurityCode(USER_EMAIL, SECURITY_CODE);
         doReturn(sc).when(securityCodeService).verify(Matchers.anyString());
         RegistrationModel registration = new RegistrationModel();
         registration.setPassword("123456");
-        doThrow(new HttpClientErrorException(HttpStatus.INTERNAL_SERVER_ERROR)).when(invitationsService).createUser(
+        doReturn(true).when(accessInvitationsService).getOrgCreationEligibility(Matchers.anyString());
+        doThrow(new InvalidOrganizationNameException("")).when(invitationsService).createUser(
                 Matchers.anyString(), Matchers.anyString(), any());
 
         sut.addUser(registration, SECURITY_CODE);

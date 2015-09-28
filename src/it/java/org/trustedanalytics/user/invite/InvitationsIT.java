@@ -211,6 +211,8 @@ public class InvitationsIT {
 
         when(accessInvitations.isEligibleToCreateOrg()).thenReturn(true);
         when(accessInvitationsService.getAccessInvitations(anyString())).thenReturn(Optional.of(accessInvitations));
+        when(accessInvitationsService.getOrgCreationEligibility(anyString())).thenReturn(true);
+
         ResponseEntity<String> response =
             restTemplate.getForEntity(baseUrl + "rest/registrations/{code}", String.class, code);
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
