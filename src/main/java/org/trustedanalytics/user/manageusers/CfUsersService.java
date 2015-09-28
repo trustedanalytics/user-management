@@ -17,6 +17,7 @@ package org.trustedanalytics.user.manageusers;
 
 import static java.util.stream.Collectors.toList;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Sets;
@@ -81,7 +82,11 @@ public class CfUsersService implements UsersService {
     public Optional<User> addOrgUser(UserRequest userRequest, UUID orgGuid, String currentUser) {
         Optional<UserIdNamePair> idNamePair = uaaClient.findUserIdByName(userRequest.getUsername());
         if(!idNamePair.isPresent()) {
-            inviteUserToOrg(userRequest.getUsername(), currentUser, orgGuid, Sets.immutableEnumSet(userRequest.getRoles()));
+            inviteUserToOrg(userRequest.getUsername(), currentUser, orgGuid,
+                ImmutableSet.<Role>builder()
+                    .addAll(userRequest.getRoles())
+                    .add(Role.USERS)
+                    .build());
         }
 
         return idNamePair.map(pair -> {
