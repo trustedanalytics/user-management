@@ -15,6 +15,7 @@
  */
 package org.trustedanalytics.user.invite.rest;
 
+import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.OrgExistsException;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
@@ -42,14 +43,17 @@ public class RegistrationsController {
     private final SecurityCodeService securityCodeService;
     private final InvitationsService invitationsService;
     private final AccessInvitationsService accessInvitationsService;
+    private final UserPasswordValidator userPasswordValidator;
 
     @Autowired
     public RegistrationsController(SecurityCodeService securityCodeService,
                                    InvitationsService invitationsService,
-                                   AccessInvitationsService accessInvitationsService) {
+                                   AccessInvitationsService accessInvitationsService,
+                                   UserPasswordValidator userPasswordValidator) {
         this.securityCodeService = securityCodeService;
         this.invitationsService = invitationsService;
         this.accessInvitationsService = accessInvitationsService;
+        this.userPasswordValidator = userPasswordValidator;
     }
 
     @RequestMapping(method = RequestMethod.POST)
@@ -60,7 +64,8 @@ public class RegistrationsController {
         }
 
         SecurityCode sc = securityCodeService.verify(code);
-        validate(newUser);
+
+        userPasswordValidator.validate(newUser.getPassword());
 
         String email = sc.getEmail();
         if (accessInvitationsService.getOrgCreationEligibility(email)) {
@@ -84,9 +89,4 @@ public class RegistrationsController {
         }
     }
 
-    private void validate(RegistrationModel user) {
-        if (Strings.nullToEmpty(user.getPassword()).length() < 6) {
-            throw new IllegalArgumentException("Password is too short");
-        }
-    }
 }

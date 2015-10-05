@@ -33,6 +33,7 @@ import org.thymeleaf.spring4.SpringTemplateEngine;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
 import org.trustedanalytics.user.common.SpaceUserRolesValidator;
+import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.invite.EmailInvitationsService;
 import org.trustedanalytics.user.invite.EmailService;
@@ -157,6 +158,11 @@ public class TestConfiguration {
     @Bean
     protected SpaceUserRolesValidator spaceRolesValidator() {
         return mock(SpaceUserRolesValidator.class);
+    }
+
+    @Bean
+    protected UserPasswordValidator passwordValidator() {
+        return mock(UserPasswordValidator.class);
     }
 
     @Bean

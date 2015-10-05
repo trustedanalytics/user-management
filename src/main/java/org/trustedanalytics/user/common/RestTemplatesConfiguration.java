@@ -77,4 +77,7 @@ public class RestTemplatesConfiguration {
     protected UserDetailsFinder detailsFinder() {
         return new AuthDetailsFinder();
     }
+
+    @Bean
+    protected UserPasswordValidator userPasswordValidator() { return new UserPasswordValidator(); }
 }

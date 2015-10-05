@@ -15,6 +15,10 @@
  */
 package org.trustedanalytics.user.invite;
 
+import org.trustedanalytics.user.common.EmptyPasswordException;
+import org.trustedanalytics.user.common.PasswordValidator;
+import org.trustedanalytics.user.common.TooShortPasswordException;
+import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.invite.rest.EntityAlreadyExistsException;
 import org.trustedanalytics.user.invite.rest.InvitationModel;
 import org.trustedanalytics.user.invite.rest.RegistrationModel;
@@ -61,9 +65,12 @@ public class RegistrationsControllerTest {
     @Mock
     private AccessInvitationsService accessInvitationsService;
 
+    private UserPasswordValidator passwordValidator = new UserPasswordValidator();
+
     @Before
     public void setUp() throws Exception {
-        sut = new RegistrationsController(securityCodeService, invitationsService, accessInvitationsService);
+        sut = new RegistrationsController(securityCodeService, invitationsService,
+                                            accessInvitationsService, passwordValidator);
     }
 
     @Test(expected = InvalidSecurityCodeException.class)
@@ -83,14 +90,24 @@ public class RegistrationsControllerTest {
         sut.addUser(new RegistrationModel(), SECURITY_CODE);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testAddUser_passwordTooShort_throwIllegarArgument() {
+    @Test(expected = TooShortPasswordException.class)
+    public void testAddUser_passwordTooShort_throwTooShortPassword() {
         SecurityCode sc = new SecurityCode(USER_EMAIL, SECURITY_CODE);
         doReturn(sc).when(securityCodeService).verify(Matchers.anyString());
         RegistrationModel registration = new RegistrationModel();
         registration.setPassword("123");
 
-        sut.addUser(new RegistrationModel(), SECURITY_CODE);
+        sut.addUser(registration, SECURITY_CODE);
+    }
+
+    @Test(expected = EmptyPasswordException.class)
+    public void testAddUser_passwordEmpty_throwEmptyPassword() {
+        SecurityCode sc = new SecurityCode(USER_EMAIL, SECURITY_CODE);
+        doReturn(sc).when(securityCodeService).verify(Matchers.anyString());
+        RegistrationModel registration = new RegistrationModel();
+        registration.setPassword("");
+
+        sut.addUser(registration, SECURITY_CODE);
     }
 
     @Test(expected = UserExistsException.class)
