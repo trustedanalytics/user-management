@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.trustedanalytics.user.common.EmptyPasswordException;
 import org.trustedanalytics.user.common.TooShortPasswordException;
 import org.trustedanalytics.user.common.WrongUserRolesException;
+import org.trustedanalytics.user.common.WrongUuidFormatException;
 import org.trustedanalytics.user.invite.rest.EntityAlreadyExistsException;
 import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 import org.trustedanalytics.user.invite.securitycode.InvalidSecurityCodeException;
@@ -61,6 +62,12 @@ public class RestErrorHandler {
     @ExceptionHandler(InvalidOrganizationNameException.class)
     public void invalidOrgName(InvalidOrganizationNameException e, HttpServletResponse response)
             throws IOException {
+        response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler(WrongUuidFormatException.class)
+    public void invalidUuidString(WrongUuidFormatException e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     }
 
