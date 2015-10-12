@@ -20,6 +20,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -37,8 +38,8 @@ import org.trustedanalytics.cloud.uaa.UserIdNamePair;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUserFactory;
 import org.trustedanalytics.user.invite.InvitationsService;
-import org.trustedanalytics.user.invite.OrgUserInvitationService;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
+import org.trustedanalytics.user.invite.securitycode.NoSuchUserException;
 import org.trustedanalytics.user.manageusers.CfUsersService;
 import org.trustedanalytics.user.manageusers.PasswordGenerator;
 import org.trustedanalytics.user.manageusers.UserRequest;
@@ -293,5 +294,24 @@ public class CfUsersServiceTest {
         verify(accessInvitationsService, never()).createOrUpdateInvitation(eq(username), any());
         verify(invitationService, never()).sendInviteEmail(eq(username), eq(currentUsername), any());
         verify(ccClient).assignOrgRole(any(), eq(orgGuid), eq(Role.BILLING_MANAGERS));
+    }
+
+    @Test(expected = NoSuchUserException.class)
+    public void updateOrgUser_userDoesNotExistInArray() {
+        UUID orgGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+        String username = "czeslaw@example.com";
+
+        User user = new User(username, userGuid, Lists.newArrayList(Role.BILLING_MANAGERS));
+
+        when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+
+        User resultUser = cfUsersService.updateOrgUser(user, orgGuid);
+
+        verify(resultUser.equals(null));
+
     }
 }

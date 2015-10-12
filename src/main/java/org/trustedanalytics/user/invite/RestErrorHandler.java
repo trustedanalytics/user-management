@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.trustedanalytics.user.invite.securitycode.NoSuchUserException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -100,6 +101,12 @@ public class RestErrorHandler {
     @ExceptionHandler(TooShortPasswordException.class)
     public void tooShortPassword(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NoSuchUserException.class)
+    public void userNotExists(NoSuchUserException e, HttpServletResponse response) throws IOException {
+        response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.FORBIDDEN)

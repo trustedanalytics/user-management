@@ -18,7 +18,6 @@ package org.trustedanalytics.user.manageusers;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Lists;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Sets;
 
@@ -30,11 +29,10 @@ import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.cloud.uaa.UserIdNamePair;
 import org.trustedanalytics.user.invite.AngularInvitationLinkGenerator;
 import org.trustedanalytics.user.invite.InvitationsService;
-import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
-import org.trustedanalytics.user.invite.rest.InvitationModel;
 
+import org.trustedanalytics.user.invite.securitycode.NoSuchUserException;
 import rx.Observable;
 
 import java.util.Arrays;
@@ -46,6 +44,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 public class CfUsersService implements UsersService {
 
@@ -134,14 +133,24 @@ public class CfUsersService implements UsersService {
         }
     }
 
+    private boolean isUserAssignedToOrg(UUID userGuid, UUID orgGuid) {
+        return this.getOrgUsers(orgGuid)
+                .stream()
+                .anyMatch(member -> member.getGuid().equals(userGuid));
+    }
+
     @Override
     public User updateOrgUser(User user, UUID orgGuid) {
-        Role[] rolesToRemove = Role.ORG_ROLES.stream()
-            .filter(x -> !x.equals(Role.USERS) && !user.getRoles().contains(x))
-            .toArray(Role[]::new);
-        revokeOrgRolesFromUser(user.getGuid(), orgGuid, rolesToRemove);
-        assignOrgRolesToUser(user.getGuid(), orgGuid, user.getRoles().stream().toArray(Role[]::new));
-        return user;
+        if(isUserAssignedToOrg(user.getGuid(), orgGuid)) {
+            Role[] rolesToRemove = Role.ORG_ROLES.stream()
+                    .filter(x -> !x.equals(Role.USERS) && !user.getRoles().contains(x))
+                    .toArray(Role[]::new);
+            revokeOrgRolesFromUser(user.getGuid(), orgGuid, rolesToRemove);
+            assignOrgRolesToUser(user.getGuid(), orgGuid, user.getRoles().stream().toArray(Role[]::new));
+            return user;
+        } else {
+            throw new NoSuchUserException("User not exists in organization.");
+        }
     }
 
     @Override
