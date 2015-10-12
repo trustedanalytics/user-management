@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import org.springframework.security.access.AccessDeniedException;
 
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
@@ -99,5 +100,11 @@ public class RestErrorHandler {
     @ExceptionHandler(TooShortPasswordException.class)
     public void tooShortPassword(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    @ExceptionHandler(AccessDeniedException.class)
+    public void accessDenied(Exception e, HttpServletResponse response) throws IOException {
+        response.sendError(HttpStatus.FORBIDDEN.value(), e.getMessage());
     }
 }
