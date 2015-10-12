@@ -28,6 +28,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.Lists;
+import org.hamcrest.CoreMatchers;
+import org.mockito.Mockito;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
@@ -39,6 +41,7 @@ import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUserFactory;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
+import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 import org.trustedanalytics.user.invite.securitycode.NoSuchUserException;
 import org.trustedanalytics.user.manageusers.CfUsersService;
 import org.trustedanalytics.user.manageusers.PasswordGenerator;
@@ -72,6 +75,9 @@ public class CfUsersServiceTest {
 
     @Mock
     private AccessInvitationsService accessInvitationsService;
+
+    @Mock
+    private UaaOperations uaaClient;
 
     @Test
     public void test_addOrgUser_userDontExist() {
@@ -160,6 +166,11 @@ public class CfUsersServiceTest {
         UUID orgGuid = UUID.randomUUID();
         UUID userGuid = UUID.randomUUID();
 
+        ArrayList<Role> roles = new ArrayList<>();
+        roles.add(Role.USERS);
+        User user = new User("testuser", userGuid, roles);
+        ArrayList<User> users = new ArrayList<>();
+        users.add(user);
 
         ArrayList<CcSpace> managedSpaces = new ArrayList<CcSpace>();
         managedSpaces.add(new CcSpace(UUID.randomUUID(), "test1", orgGuid));
@@ -178,6 +189,11 @@ public class CfUsersServiceTest {
         when(ccClient.getUsersSpaces(userGuid, Role.DEVELOPERS, orgGuid)).thenReturn(spaces);
         when(ccClient.getUserOrgs(userGuid)).thenReturn(Collections.singletonList(new CcOrg(orgGuid, "testorg")));
 
+        when(ccClient.getOrgUsers(orgGuid, Role.BILLING_MANAGERS)).thenReturn(Collections.emptyList());
+        when(ccClient.getOrgUsers(orgGuid, Role.MANAGERS)).thenReturn(Collections.emptyList());
+        when(ccClient.getOrgUsers(orgGuid, Role.AUDITORS)).thenReturn(Collections.emptyList());
+        when(ccClient.getOrgUsers(orgGuid, Role.USERS)).thenReturn(users);
+
         CfUsersService cfUsersService =
                 new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
         cfUsersService.deleteUserFromOrg(userGuid, orgGuid);
@@ -191,6 +207,62 @@ public class CfUsersServiceTest {
         verify(ccClient, times(1)).revokeOrgRole(eq(userGuid), eq(orgGuid), eq(Role.BILLING_MANAGERS));
 
         verify(uaaOperations, never()).createUser(any(), any());
+    }
+
+    @Test(expected = EntityNotFoundException.class)
+    public void test_deleteUserFromOrg_userDoesNotExist_throwEntityNotFound() {
+        UUID orgGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+
+        when(ccClient.getUsersSpaces(userGuid, Role.MANAGERS, orgGuid)).thenReturn(Collections.emptyList());
+        when(ccClient.getUsersSpaces(userGuid, Role.AUDITORS, orgGuid)).thenReturn(Collections.emptyList());
+        when(ccClient.getUsersSpaces(userGuid, Role.DEVELOPERS, orgGuid)).thenReturn(Collections.emptyList());
+
+        when(ccClient.getOrgUsers(orgGuid, Role.BILLING_MANAGERS)).thenReturn(Collections.emptyList());
+        when(ccClient.getOrgUsers(orgGuid, Role.MANAGERS)).thenReturn(Collections.emptyList());
+        when(ccClient.getOrgUsers(orgGuid, Role.AUDITORS)).thenReturn(Collections.emptyList());
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+        cfUsersService.deleteUserFromOrg(userGuid, orgGuid);
+    }
+
+    @Test
+    public void test_deleteUserFromSpace() {
+        UUID spaceGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+
+        ArrayList<Role> roles = new ArrayList<>();
+        roles.add(Role.AUDITORS);
+        User user = new User("testuser", userGuid, roles);
+        ArrayList<User> users = new ArrayList<>();
+        users.add(user);
+
+        when(ccClient.getSpaceUsers(spaceGuid, Role.MANAGERS)).thenReturn(Collections.emptyList());
+        when(ccClient.getSpaceUsers(spaceGuid, Role.DEVELOPERS)).thenReturn(Collections.emptyList());
+        when(ccClient.getSpaceUsers(spaceGuid, Role.AUDITORS)).thenReturn(users);
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+        cfUsersService.deleteUserFromSpace(userGuid, spaceGuid);
+
+        verify(ccClient, times(1)).revokeSpaceRole(eq(userGuid), eq(spaceGuid), eq(Role.MANAGERS));
+        verify(ccClient, times(1)).revokeSpaceRole(eq(userGuid), eq(spaceGuid), eq(Role.DEVELOPERS));
+        verify(ccClient, times(1)).revokeSpaceRole(eq(userGuid), eq(spaceGuid), eq(Role.AUDITORS));
+    }
+
+    @Test(expected = EntityNotFoundException.class)
+    public void test_deleteUserFromSpace_throwEntityNotFound() {
+        UUID spaceGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+
+        when(ccClient.getSpaceUsers(spaceGuid, Role.MANAGERS)).thenReturn(Collections.emptyList());
+        when(ccClient.getSpaceUsers(spaceGuid, Role.DEVELOPERS)).thenReturn(Collections.emptyList());
+        when(ccClient.getSpaceUsers(spaceGuid, Role.AUDITORS)).thenReturn(Collections.emptyList());
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+        cfUsersService.deleteUserFromSpace(userGuid, spaceGuid);
     }
 
     @Test

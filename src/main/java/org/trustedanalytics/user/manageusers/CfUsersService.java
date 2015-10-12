@@ -183,7 +183,7 @@ public class CfUsersService implements UsersService {
 
     @Override
     public void deleteUserFromOrg(UUID userGuid, UUID orgGuid) {
-        if (ccClient.getUserOrgs(userGuid).stream().noneMatch(x -> orgGuid.equals(x.getGuid()))) {
+        if (getOrgUsers(orgGuid).stream().noneMatch(x -> userGuid.equals(x.getGuid()))) {
             throw new EntityNotFoundException("The user is not in given organization", null);
         }
 
@@ -199,6 +199,10 @@ public class CfUsersService implements UsersService {
 
     @Override
     public void deleteUserFromSpace(UUID userGuid, UUID spaceGuid) {
+        if (getSpaceUsers(spaceGuid).stream().noneMatch(x -> userGuid.equals(x.getGuid()))) {
+            throw new EntityNotFoundException("The user is not in given space", null);
+        }
+
         Role.SPACE_ROLES.stream().forEach(role -> ccClient.revokeSpaceRole(userGuid, spaceGuid, role));
     }
 

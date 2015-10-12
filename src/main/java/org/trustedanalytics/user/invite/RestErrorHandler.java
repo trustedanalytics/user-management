@@ -75,7 +75,8 @@ public class RestErrorHandler {
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
-    public void entityNotFound() {
+    public void entityNotFound(Exception e, HttpServletResponse response) throws IOException {
+        response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.CONFLICT)
