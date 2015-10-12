@@ -18,6 +18,7 @@ package org.trustedanalytics.user.common;
 import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 import static org.springframework.web.context.WebApplicationContext.SCOPE_REQUEST;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.cloud.auth.OAuth2TokenRetriever;
@@ -38,9 +39,14 @@ import org.springframework.security.oauth2.client.token.grant.client.ClientCrede
 import org.springframework.security.oauth2.client.token.grant.client.ClientCredentialsResourceDetails;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
+
 @Profile("cloud")
 @Configuration
 public class RestTemplatesConfiguration {
+
+    @Value("#{'${smtp.forbidden_domains}'.split(',')}")
+    private List<String> forbiddenDomains;
 
     @Bean
     public OAuth2ClientContext oauth2ClientContext() {
@@ -80,4 +86,9 @@ public class RestTemplatesConfiguration {
 
     @Bean
     protected UserPasswordValidator userPasswordValidator() { return new UserPasswordValidator(); }
+
+    @Bean
+    protected BlacklistEmailValidator emailValidator(){
+        return new BlacklistEmailValidator(forbiddenDomains);
+    }
 }

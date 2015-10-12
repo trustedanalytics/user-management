@@ -34,13 +34,16 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.security.core.Authentication;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @RunWith(MockitoJUnitRunner.class)
 public class InvitationsControllerTest {
 
     private static final String ADMIN_EMAIL = "admin@example.com";
     private static final String USER_EMAIL = "email@example.com";
-
+    private List<String> forbiddenDomains = new ArrayList<>();
 
     private InvitationsController sut;
 
@@ -53,15 +56,14 @@ public class InvitationsControllerTest {
     @Mock
     private UserDetailsFinder detailsFinder;
 
-    @Mock
-    private BlacklistEmailValidator emailValidator;
+    private BlacklistEmailValidator emailValidator = new BlacklistEmailValidator(forbiddenDomains);
 
     @Mock
     private AccessInvitationsService accessInvitationsService;
 
     @Before
     public void setUp() throws Exception {
-        sut = new InvitationsController(invitationsService, detailsFinder, accessInvitationsService);
+        sut = new InvitationsController(invitationsService, detailsFinder, accessInvitationsService, emailValidator);
     }
 
     @Test
@@ -72,5 +74,12 @@ public class InvitationsControllerTest {
 
         Mockito.verify(invitationsService).sendInviteEmail(
                 eq(USER_EMAIL), eq(ADMIN_EMAIL), any(InvitationLinkGenerator.class));
+    }
+
+    @Test(expected = WrongEmailAddressException.class)
+    public void testAddInvitation_WrongEmailAddress() {
+        String invalidEmail = "invalidEmail";
+        InvitationModel invitation = InvitationModel.of(invalidEmail, true);
+        sut.addInvitation(invitation, null);
     }
 }

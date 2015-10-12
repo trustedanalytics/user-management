@@ -100,7 +100,7 @@ public class AccessInvitationsService {
 
     private void validateRoles(Set<Role> roles) {
         if (roles == null || roles.isEmpty()) {
-            throw new IllegalArgumentException("At leas one role needs to be provided");
+            throw new IllegalArgumentException("At least one role needs to be provided");
         }
     }
 }

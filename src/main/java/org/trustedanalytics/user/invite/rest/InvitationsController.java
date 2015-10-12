@@ -15,6 +15,7 @@
  */
 package org.trustedanalytics.user.invite.rest;
 
+import org.trustedanalytics.user.common.BlacklistEmailValidator;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.invite.AngularInvitationLinkGenerator;
 import org.trustedanalytics.user.invite.InvitationNotSentException;
@@ -44,13 +45,17 @@ public class InvitationsController {
 
     private final UserDetailsFinder detailsFinder;
 
+    private final BlacklistEmailValidator emailValidator;
+
     @Autowired
     public InvitationsController(InvitationsService invitationsService,
                                  UserDetailsFinder detailsFinder,
-                                 AccessInvitationsService accessInvitationsService){
+                                 AccessInvitationsService accessInvitationsService,
+                                 BlacklistEmailValidator emailValidator){
         this.invitationsService = invitationsService;
         this.detailsFinder = detailsFinder;
         this.accessInvitationsService = accessInvitationsService;
+        this.emailValidator = emailValidator;
     }
 
     @RequestMapping(method = RequestMethod.POST)
@@ -58,6 +63,8 @@ public class InvitationsController {
     public ErrorDescriptionModel addInvitation
             (@RequestBody InvitationModel invitation,
              Authentication authentication) {
+
+        emailValidator.validate(invitation.getEmail());
 
         String userName = detailsFinder.findUserName(authentication);
 
