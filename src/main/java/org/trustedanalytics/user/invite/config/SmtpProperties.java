@@ -15,6 +15,7 @@
  */
 package org.trustedanalytics.user.invite.config;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -28,22 +29,22 @@ import org.springframework.stereotype.Component;
 public class SmtpProperties {
 
     @Getter @Setter
+    private String protocol;
+
+    @Getter @Setter
     private String host;
-
-    @Getter @Setter
-    private int port;
-
-    @Getter @Setter
-    private int sslPort;
-
-    @Getter @Setter
-    private String email;
 
     @Getter @Setter
     private String username;
 
     @Getter @Setter
     private String password;
+
+    @Getter @Setter
+    private String email;
+
+    @Getter @Setter
+    private int port;
 
     @Getter @Setter
     private int timeout;
@@ -54,15 +55,9 @@ public class SmtpProperties {
     @Getter @Setter
     private String emailName;
 
-    @Getter @Setter
-    private boolean useSsl;
-
-    @Getter @Setter
-    private boolean useAuth;
-
     @Override
     public int hashCode() {
-        return Objects.hash(host, port, username, password, timeout, debug, emailName, sslPort, useSsl, useAuth);
+        return Objects.hash(timeout, debug, emailName, host, protocol, username, password, port);
     }
     
     @Override
@@ -74,16 +69,15 @@ public class SmtpProperties {
         SmtpProperties other;
         if (obj instanceof SmtpProperties) {
             other = (SmtpProperties) obj;
-            return allTrue(Objects.equals(host, other.host),
-                   Objects.equals(port, other.port),
-                   Objects.equals(sslPort, other.sslPort),
-                   Objects.equals(useSsl, other.useSsl),
-                   Objects.equals(useAuth, other.useAuth),
-                   Objects.equals(username, other.username),
-                   Objects.equals(password, other.password),
+            return allTrue(
                    Objects.equals(timeout, other.timeout),
                    Objects.equals(debug, other.debug),
-                   Objects.equals(emailName, other.emailName));
+                   Objects.equals(host, other.host),
+                   Objects.equals(emailName, other.emailName),
+                   Objects.equals(protocol, other.protocol),
+                   Objects.equals(username, other.username),
+                   Objects.equals(password, other.password),
+                   Objects.equals(port, other.port));
         }
         
         return false;

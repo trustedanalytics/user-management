@@ -16,10 +16,14 @@
 package org.trustedanalytics.user.invite.config;
 
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.util.List;
 import java.util.Properties;
 
 import com.google.common.base.Strings;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +37,8 @@ import org.trustedanalytics.user.invite.EmailInvitationsService;
 import org.trustedanalytics.user.invite.EmailService;
 import org.trustedanalytics.user.invite.InvitationsService;
 
+import javax.mail.URLName;
+
 @Configuration
 @Profile({"dev", "cloud"})
 public class InvitationsConfig {
@@ -44,23 +50,32 @@ public class InvitationsConfig {
     private SmtpProperties smtpProperties;
 
     @Bean(name="emailService")
-    protected EmailService emailService() throws UnsupportedEncodingException{
+    protected EmailService emailService() throws UnsupportedEncodingException, URISyntaxException {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
-        if(smtpProperties.isUseSsl()) {
-            sender.setPort(smtpProperties.getSslPort());
-            sender.setProtocol("smtps");
+
+        int port = smtpProperties.getPort();
+
+        if (port > 0) {
+            sender.setPort(port);
         }
-        else {
-            sender.setPort(smtpProperties.getPort());
-            sender.setProtocol("smtp");
-        }
+        sender.setProtocol(smtpProperties.getProtocol());
         sender.setHost(smtpProperties.getHost());
-        sender.setUsername(smtpProperties.getUsername());
-        sender.setPassword(smtpProperties.getPassword());
 
         Properties mailProps = new Properties();
-        mailProps.setProperty("mail.smtps.auth", Boolean.toString(smtpProperties.isUseAuth()));
-        mailProps.setProperty("mail.smtps.ssl.enable",  Boolean.toString(smtpProperties.isUseSsl()));
+
+        if (!StringUtils.isBlank(smtpProperties.getUsername()) && !StringUtils.isBlank(smtpProperties.getPassword()) ) {
+            sender.setUsername(smtpProperties.getUsername());
+            sender.setPassword(smtpProperties.getPassword());
+            mailProps.setProperty(String.format("mail.%s.auth", smtpProperties.getProtocol()), "true");
+        }
+        else {
+            mailProps.setProperty(String.format("mail.%s.auth", smtpProperties.getProtocol()), "false");
+        }
+
+        if(smtpProperties.getProtocol().equals("smtps")) {
+            mailProps.setProperty(String.format("mail.smtps.ssl.enable", smtpProperties.getProtocol()), "true");
+        }
+
         mailProps.setProperty("mail.smtps.connectiontimeout", Integer.toString(smtpProperties.getTimeout()));
 
         if (smtpProperties.isDebug()) {
@@ -69,7 +84,7 @@ public class InvitationsConfig {
         }
 
         sender.setJavaMailProperties(mailProps);
-        
+
         return new EmailService(sender, smtpProperties.getEmail(), smtpProperties.getEmailName());
     }
 

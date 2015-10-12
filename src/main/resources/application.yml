@@ -22,19 +22,18 @@ oauth:
   uaa: ${vcap.services.sso.credentials.uaaUri}
 
 smtp:
-  host: ${vcap.services.smtp.credentials.hostname}
-  use_ssl: ${vcap.services.smtp.credentials.use_ssl:true}
+  host: ${vcap.services.smtp.credentials.host}
   port: ${vcap.services.smtp.credentials.port}
-  ssl_port: ${vcap.services.smtp.credentials.port_ssl}
-  email: ${vcap.services.sso.credentials.email}
+  protocol: ${vcap.services.smtp.credentials.protocol}
   username: ${vcap.services.smtp.credentials.username}
   password: ${vcap.services.smtp.credentials.password}
+  email: ${vcap.services.sso.credentials.email}
   timeout: 5000
   debug: true
   #List of blocked domain. Adding new domain after comma: example.com,foo.com
   forbidden_domains: ${vcap.services.smtp.credentials.forbidden_domains:example.com}
   email_name: ${vcap.services.smtp.credentials.email_name:TrustedAnalytics}
-  use_auth: ${vcap.services.smtp.credentials.use_auth:true}
+
 web:
   debug: false
 
