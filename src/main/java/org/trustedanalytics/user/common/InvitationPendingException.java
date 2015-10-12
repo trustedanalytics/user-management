@@ -13,11 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite;
+package org.trustedanalytics.user.common;
 
 
-public class UserExistsException extends RuntimeException {
-    public UserExistsException(String message) {
+public class InvitationPendingException extends RuntimeException {
+    public InvitationPendingException(String message) {
         super(message);
     }
 }

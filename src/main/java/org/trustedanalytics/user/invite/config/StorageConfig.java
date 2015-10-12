@@ -15,14 +15,11 @@
  */
 package org.trustedanalytics.user.invite.config;
 
-import org.springframework.data.redis.connection.RedisServer;
+import org.trustedanalytics.user.invite.keyvaluestore.InMemoryStore;
+import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
 import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
-import org.trustedanalytics.user.invite.access.AccessInvitationsStore;
-import org.trustedanalytics.user.invite.access.InMemoryAccessInvitationsStore;
-import org.trustedanalytics.user.invite.access.RedisAccessInvitationsStore;
-import org.trustedanalytics.user.invite.securitycode.InMemorySecurityCodeService;
-import org.trustedanalytics.user.invite.securitycode.RedisSecurityCodeService;
+import org.trustedanalytics.user.invite.keyvaluestore.RedisStore;
 import org.trustedanalytics.user.invite.securitycode.SecurityCode;
 import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
 
@@ -46,17 +43,26 @@ public class StorageConfig {
     public static class InMemoryStorageConfig {
 
         @Bean
-        SecurityCodeService inMemorySecurityCodeService() {
-            return new InMemorySecurityCodeService();
+        KeyValueStore<SecurityCode> inMemorySecurityCodeStore() {
+            return new InMemoryStore<SecurityCode>();
         }
 
         @Bean
-        AccessInvitationsStore inMemoryAccessInvitationsStore() {
-            return new InMemoryAccessInvitationsStore();
+        SecurityCodeService inMemorySecurityCodeService(KeyValueStore<SecurityCode> inMemorySecurityCodeStore) {
+            return new SecurityCodeService(inMemorySecurityCodeStore);
+        }
+    }
+
+    @Profile("in-memory")
+    @Configuration
+    public static class InMemoryInvitationsStorageConfig {
+        @Bean
+        KeyValueStore<AccessInvitations> inMemoryAccessInvitationsStore() {
+            return new InMemoryStore<AccessInvitations>();
         }
 
         @Bean
-        AccessInvitationsService inMemoryAccessInvitationsService(AccessInvitationsStore inMemoryAccessInvitationsStore) {
+        AccessInvitationsService inMemoryAccessInvitationsService(KeyValueStore<AccessInvitations> inMemoryAccessInvitationsStore) {
             return new AccessInvitationsService(inMemoryAccessInvitationsStore);
         }
     }
@@ -66,8 +72,13 @@ public class StorageConfig {
     public static class RedisStorageConfig {
 
         @Bean
-        protected SecurityCodeService redisSecurityCodeService(RedisOperations<String, SecurityCode> redisTemplate) {
-            return new RedisSecurityCodeService(redisTemplate);
+        KeyValueStore<SecurityCode> redisSecurityCodeStore( RedisOperations<String, SecurityCode> redisTemplate) {
+            return new RedisStore<SecurityCode>(redisTemplate, "security-codes");
+        }
+
+        @Bean
+        protected SecurityCodeService redisSecurityCodeService(KeyValueStore<SecurityCode> redisSecurityCodeStore) {
+            return new SecurityCodeService(redisSecurityCodeStore);
         }
 
         @Bean
@@ -81,13 +92,13 @@ public class StorageConfig {
     @Configuration
     public static class RedisInvitationStorageConfig {
         @Bean
-        public AccessInvitationsStore redisAccessInvitationsStore(
+        public KeyValueStore<AccessInvitations> redisAccessInvitationsStore(
                 RedisOperations<String, AccessInvitations> redisAccessInvitationsTemplate) {
-            return new RedisAccessInvitationsStore(redisAccessInvitationsTemplate);
+            return new RedisStore<AccessInvitations>(redisAccessInvitationsTemplate, "access-invitations");
         }
 
         @Bean
-        AccessInvitationsService redisAccessInvitationsService(AccessInvitationsStore redisAccessInvitationsStore) {
+        AccessInvitationsService redisAccessInvitationsService(KeyValueStore<AccessInvitations> redisAccessInvitationsStore) {
             return new AccessInvitationsService(redisAccessInvitationsStore);
         }
 

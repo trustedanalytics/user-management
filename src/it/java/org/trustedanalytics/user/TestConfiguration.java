@@ -16,6 +16,8 @@
 package org.trustedanalytics.user;
 
 import static org.mockito.Mockito.mock;
+import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
+import static org.springframework.web.context.WebApplicationContext.SCOPE_REQUEST;
 
 import java.io.UnsupportedEncodingException;
 
@@ -26,22 +28,23 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.spring4.SpringTemplateEngine;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
+import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
 import org.trustedanalytics.user.common.SpaceUserRolesValidator;
 import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.current.UserDetailsFinder;
-import org.trustedanalytics.user.invite.EmailInvitationsService;
-import org.trustedanalytics.user.invite.EmailService;
-import org.trustedanalytics.user.invite.InvitationsService;
-import org.trustedanalytics.user.invite.MessageService;
-import org.trustedanalytics.user.invite.SecurityDisabler;
+import org.trustedanalytics.user.invite.*;
 import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
+import org.trustedanalytics.user.manageusers.UsersService;
 
 @Configuration
 public class TestConfiguration {
@@ -86,6 +89,11 @@ public class TestConfiguration {
 
     public static String getAddDeveloperToSpaceUrl() {
         return apiBaseUrl + "/v2/spaces/{space}/developers/{user}";
+    }
+
+    @Bean
+    protected UsersService usersService() {
+        return mock(UsersService.class);
     }
 
     @Bean
@@ -168,6 +176,11 @@ public class TestConfiguration {
     @Bean
     protected AccessInvitations accessInvitations() {
         return mock(AccessInvitations.class);
+    }
+
+    @Bean
+    protected InvitationLinkGenerator invitationLinkGenerator() {
+        return mock(InvitationLinkGenerator.class);
     }
 
     public static String getUaaGetUser(String username) {

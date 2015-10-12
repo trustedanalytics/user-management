@@ -15,9 +15,10 @@
  */
 package org.trustedanalytics.user.invite.access;
 
+import org.trustedanalytics.cloud.cc.api.manageusers.Role;
+
 import lombok.Getter;
 import lombok.Setter;
-import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 
 import java.util.HashMap;
 import java.util.Map;

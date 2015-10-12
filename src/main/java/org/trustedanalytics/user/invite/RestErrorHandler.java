@@ -18,6 +18,8 @@ package org.trustedanalytics.user.invite;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.trustedanalytics.user.common.EmptyPasswordException;
 import org.trustedanalytics.user.common.TooShortPasswordException;
+import org.trustedanalytics.user.common.NoPendingInvitationFoundException;
+import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.common.WrongUserRolesException;
 import org.trustedanalytics.user.common.WrongUuidFormatException;
 import org.trustedanalytics.user.invite.rest.EntityAlreadyExistsException;
@@ -102,6 +104,13 @@ public class RestErrorHandler {
     @ExceptionHandler(TooShortPasswordException.class)
     public void tooShortPassword(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
+    }
+
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ExceptionHandler(NoPendingInvitationFoundException.class)
+    public void noPendingInvitation(NoPendingInvitationFoundException e, HttpServletResponse response)
+            throws IOException {
+        response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.NOT_FOUND)

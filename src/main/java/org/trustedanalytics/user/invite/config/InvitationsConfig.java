@@ -15,14 +15,15 @@
  */
 package org.trustedanalytics.user.invite.config;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.util.List;
-import java.util.Properties;
+import org.trustedanalytics.user.common.BlacklistEmailValidator;
+import org.trustedanalytics.user.common.SpaceUserRolesValidator;
 
-import com.google.common.base.Strings;
+import org.trustedanalytics.user.invite.AngularInvitationLinkGenerator;
+import org.trustedanalytics.user.invite.EmailInvitationsService;
+import org.trustedanalytics.user.invite.EmailService;
+import org.trustedanalytics.user.invite.InvitationLinkGenerator;
+import org.trustedanalytics.user.invite.InvitationsService;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,13 +32,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.thymeleaf.spring4.SpringTemplateEngine;
-import org.trustedanalytics.user.common.BlacklistEmailValidator;
-import org.trustedanalytics.user.common.SpaceUserRolesValidator;
-import org.trustedanalytics.user.invite.EmailInvitationsService;
-import org.trustedanalytics.user.invite.EmailService;
-import org.trustedanalytics.user.invite.InvitationsService;
 
-import javax.mail.URLName;
+import java.io.UnsupportedEncodingException;
+import java.util.List;
+import java.util.Properties;
 
 @Configuration
 @Profile({"dev", "cloud"})
@@ -50,7 +48,7 @@ public class InvitationsConfig {
     private SmtpProperties smtpProperties;
 
     @Bean(name="emailService")
-    protected EmailService emailService() throws UnsupportedEncodingException, URISyntaxException {
+    protected EmailService emailService() throws UnsupportedEncodingException {
         JavaMailSenderImpl sender = new JavaMailSenderImpl();
 
         int port = smtpProperties.getPort();
@@ -101,5 +99,10 @@ public class InvitationsConfig {
     @Bean
     protected SpaceUserRolesValidator spaceRolesValidator(){
         return new SpaceUserRolesValidator();
+    }
+
+    @Bean
+    protected InvitationLinkGenerator intitationLinkGenerator() {
+        return new AngularInvitationLinkGenerator();
     }
 }

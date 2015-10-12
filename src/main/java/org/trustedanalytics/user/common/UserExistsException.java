@@ -13,17 +13,11 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite.rest;
+package org.trustedanalytics.user.common;
 
-public class EntityNotFoundException extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
-
-    public EntityNotFoundException(String message) {
+public class UserExistsException extends RuntimeException {
+    public UserExistsException(String message) {
         super(message);
-    }
-
-    public EntityNotFoundException(String message, Throwable cause) {
-        super(message, cause);
     }
 }

@@ -13,16 +13,10 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite.access;
+package org.trustedanalytics.user.common;
 
-import java.util.Set;
-
-public interface AccessInvitationsStore {
-    boolean hasKey(String key);
-
-    AccessInvitations get(String key);
-
-    void remove(String key);
-
-    void put(String key, AccessInvitations invitations);
+public class NoPendingInvitationFoundException extends RuntimeException {
+    public NoPendingInvitationFoundException(String message) {
+        super(message);
+    }
 }

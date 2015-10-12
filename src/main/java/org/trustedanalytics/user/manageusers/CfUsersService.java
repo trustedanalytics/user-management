@@ -118,7 +118,7 @@ public class CfUsersService implements UsersService {
         AccessInvitationsService.CreateOrUpdateState state =
                 accessInvitationsService.createOrUpdateInvitation(username, ui -> ui.addOrgAccessInvitation(orgGuid, roles));
         if (state == AccessInvitationsService.CreateOrUpdateState.CREATED) {
-            invitationsService.sendInviteEmail(username, currentUser, new AngularInvitationLinkGenerator());
+            invitationsService.sendInviteEmail(username, currentUser);
         }
     }
 
@@ -129,7 +129,7 @@ public class CfUsersService implements UsersService {
             ui.addSpaceAccessInvitation(spaceGuid, roles);
         });
         if (state == AccessInvitationsService.CreateOrUpdateState.CREATED) {
-            invitationsService.sendInviteEmail(username, currentUser, new AngularInvitationLinkGenerator());
+            invitationsService.sendInviteEmail(username, currentUser);
         }
     }
 

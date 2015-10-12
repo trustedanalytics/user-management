@@ -21,14 +21,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.*;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
-import org.mockito.ArgumentCaptor;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
-import org.trustedanalytics.cloud.cc.api.manageusers.Role;
-import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
+import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -54,7 +47,7 @@ public class AccessInvitationsServiceTest {
     private AccessInvitations mockUserInvitations;
 
     @Mock
-    private AccessInvitationsStore mockInvitationsStore;
+    private KeyValueStore<AccessInvitations> mockInvitationsStore;
 
     @Before
     public void setUp() {

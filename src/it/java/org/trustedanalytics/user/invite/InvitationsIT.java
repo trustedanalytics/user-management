@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.hamcrest.CoreMatchers;
+import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.cloud.uaa.UserIdNameList;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUserFactory;
@@ -61,6 +62,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.client.RestOperations;
+import org.trustedanalytics.user.manageusers.UsersService;
 import org.trustedanalytics.user.orgs.RestOperationsHelpers;
 import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.Page;
@@ -113,6 +115,9 @@ public class InvitationsIT {
     @Autowired
     private AccessInvitations accessInvitations;
 
+    @Autowired
+    private InvitationLinkGenerator invitationLinkGenerator;
+
     private TestRestTemplate restTemplate;
 
     private static final String USER = "user";
@@ -135,6 +140,10 @@ public class InvitationsIT {
         MockitoAnnotations.initMocks(this);
         when(detailsFinder.findUserName(any(Authentication.class))).thenReturn(USER);
         when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        setUpNotExistingUserRequest(INVITATION_MAIL);
+        when(accessInvitationsService.getAccessInvitations(INVITATION_MAIL)).thenReturn(Optional.empty());
+        when(invitationLinkGenerator.getLink(anyString())).thenReturn("http://example.com");
+
         InvitationModel invitation = InvitationModel.of(INVITATION_MAIL, false);
 
         ResponseEntity<String> response =
@@ -194,10 +203,7 @@ public class InvitationsIT {
                })))
                .thenReturn(new ResponseEntity<Page<CcOrg>>(page1, HttpStatus.OK));
 
-        UserIdNameList userList = new UserIdNameList();
-        userList.setUsers(Lists.newArrayList());
-        when(clientRestTemplate.getForObject(eq(TestConfiguration.getUaaGetUser(username)), eq(UserIdNameList.class), eq(ImmutableMap.of("name", username))))
-                .thenReturn(userList);
+        setUpNotExistingUserRequest(username);
 
         when(clientRestTemplate
                 .postForObject(eq(TestConfiguration.getCreateOrgUrl()), anyObject(), eq(String.class)))
@@ -247,6 +253,13 @@ public class InvitationsIT {
             userGuid,
             spaceGuid,
             TestConfiguration.getAddDeveloperToSpaceUrl());
+    }
+
+    private void setUpNotExistingUserRequest(String username) {
+        UserIdNameList userList = new UserIdNameList();
+        userList.setUsers(Lists.newArrayList());
+        when(clientRestTemplate.getForObject(eq(TestConfiguration.getUaaGetUser(username)), eq(UserIdNameList.class), eq(ImmutableMap.of("name", username))))
+                .thenReturn(userList);
     }
 
     private static String getCfCreateJSONExpectedResponse(String guidString) {

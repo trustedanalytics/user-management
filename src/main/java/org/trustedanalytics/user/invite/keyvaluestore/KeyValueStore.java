@@ -13,31 +13,23 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite.access;
+package org.trustedanalytics.user.invite.keyvaluestore;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
-public class InMemoryAccessInvitationsStore implements AccessInvitationsStore {
-    final private Map<String, AccessInvitations> invitationsMap = new HashMap<String, AccessInvitations>();
+public interface KeyValueStore<T> {
+    boolean hasKey(String key);
 
-    @Override
-    public boolean hasKey(String key) {
-        return invitationsMap.containsKey(key);
-    }
+    T get(String key);
 
-    @Override
-    public AccessInvitations get(String key) {
-        return invitationsMap.get(key);
-    }
+    void remove(String key);
 
-    @Override
-    public void remove(String key) {
-        invitationsMap.remove(key);
-    }
+    void put(String key, T value);
 
-    @Override
-    public void put(String key, AccessInvitations invitations) {
-        invitationsMap.put(key, invitations);
-    }
+    boolean putIfAbsent(String key, T value);
+
+    Set<String> keys();
+
+    Map<String, T> entries();
 }

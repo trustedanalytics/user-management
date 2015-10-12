@@ -17,7 +17,6 @@ package org.trustedanalytics.user.invite.rest;
 
 import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.invite.InvitationsService;
-import org.trustedanalytics.user.invite.OrgExistsException;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.invite.securitycode.InvalidSecurityCodeException;
 import org.trustedanalytics.user.invite.securitycode.SecurityCode;
@@ -25,16 +24,12 @@ import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
 
 import com.google.common.base.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
-
-import javax.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/rest/registrations")
@@ -74,8 +69,8 @@ public class RegistrationsController {
         else {
             invitationsService.createUser(email, newUser.getPassword());
         }
-        securityCodeService.use(sc);
-        accessInvitationsService.useAccessInvitations(email);
+        securityCodeService.redeem(sc);
+        accessInvitationsService.redeemAccessInvitations(email);
         return newUser;
     }
 

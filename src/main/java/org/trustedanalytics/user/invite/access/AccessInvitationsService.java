@@ -17,6 +17,7 @@ package org.trustedanalytics.user.invite.access;
 
 import com.google.common.base.Strings;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
+import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
 
 import java.util.Optional;
 import java.util.Set;
@@ -24,14 +25,14 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 public class AccessInvitationsService {
-    public static enum CreateOrUpdateState {
+    public enum CreateOrUpdateState {
         CREATED,
         UPDATED
     }
 
-    private final AccessInvitationsStore store;
+    private final KeyValueStore<AccessInvitations> store;
 
-    public AccessInvitationsService(AccessInvitationsStore store){
+    public AccessInvitationsService(KeyValueStore<AccessInvitations> store){
         this.store = store;
     }
 
@@ -63,7 +64,7 @@ public class AccessInvitationsService {
         store.put(email, invitations);
     }
 
-    public void useAccessInvitations(String email) {
+    public void redeemAccessInvitations(String email) {
         validateStringArgument(email);
         store.remove(email);
     }
@@ -84,6 +85,10 @@ public class AccessInvitationsService {
         consumer.accept(userInvitations);
         store.put(email, userInvitations);
         return state;
+    }
+
+    public Set<String> getKeys() {
+        return store.keys();
     }
 
     private void validateStringArgument(String arg) {

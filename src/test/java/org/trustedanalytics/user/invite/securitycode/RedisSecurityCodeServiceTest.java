@@ -32,6 +32,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisOperations;
+import org.trustedanalytics.user.invite.keyvaluestore.RedisStore;
 
 
 @RunWith(MockitoJUnitRunner.class)
@@ -51,7 +52,9 @@ public class RedisSecurityCodeServiceTest {
             .thenReturn(Boolean.FALSE)
             .thenReturn(Boolean.TRUE);
 
-        RedisSecurityCodeService service = new RedisSecurityCodeService(redisOps);
+
+        RedisStore<SecurityCode> redisStore = new RedisStore<>(redisOps, "test-key");
+        SecurityCodeService service = new SecurityCodeService(redisStore);
         SecurityCode code = service.generateCode("test@example.com");
 
         assertThat(code.getCode(), not(isEmptyOrNullString()));
@@ -68,7 +71,8 @@ public class RedisSecurityCodeServiceTest {
         when(redisOps.<String, SecurityCode>opsForHash()).thenReturn(hashOps);
         when(hashOps.putIfAbsent(anyString(), anyString(), any(SecurityCode.class))).thenReturn(Boolean.FALSE);
 
-        RedisSecurityCodeService service = new RedisSecurityCodeService(redisOps);
+        RedisStore<SecurityCode> redisStore = new RedisStore<>(redisOps, "test-key");
+        SecurityCodeService service = new SecurityCodeService(redisStore);
         service.generateCode("test@example.com");
     }
 

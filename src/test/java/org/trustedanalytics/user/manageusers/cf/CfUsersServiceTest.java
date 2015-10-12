@@ -285,7 +285,7 @@ public class CfUsersServiceTest {
 
         assertFalse(result.isPresent());
         verify(accessInvitationsService).createOrUpdateInvitation(eq(username), any());
-        verify(invitationService).sendInviteEmail(eq(username), eq(currentUsername), any());
+        verify(invitationService).sendInviteEmail(eq(username), eq(currentUsername));
     }
 
     @Test
@@ -313,7 +313,7 @@ public class CfUsersServiceTest {
 
         assertTrue(result.isPresent());
         verify(accessInvitationsService, never()).createOrUpdateInvitation(eq(username), any());
-        verify(invitationService, never()).sendInviteEmail(eq(username), eq(currentUsername), any());
+        verify(invitationService, never()).sendInviteEmail(eq(username), eq(currentUsername));
         verify(ccClient).assignOrgRole(any(), eq(orgGuid), eq(Role.USERS));
         verify(ccClient).assignSpaceRole(any(), eq(spaceGuid), eq(Role.DEVELOPERS));
     }
@@ -337,7 +337,7 @@ public class CfUsersServiceTest {
 
         assertFalse(result.isPresent());
         verify(accessInvitationsService).createOrUpdateInvitation(eq(username), any());
-        verify(invitationService).sendInviteEmail(eq(username), eq(currentUsername), any());
+        verify(invitationService).sendInviteEmail(eq(username), eq(currentUsername));
     }
 
     @Test
@@ -364,7 +364,7 @@ public class CfUsersServiceTest {
 
         assertTrue(result.isPresent());
         verify(accessInvitationsService, never()).createOrUpdateInvitation(eq(username), any());
-        verify(invitationService, never()).sendInviteEmail(eq(username), eq(currentUsername), any());
+        verify(invitationService, never()).sendInviteEmail(eq(username), eq(currentUsername));
         verify(ccClient).assignOrgRole(any(), eq(orgGuid), eq(Role.BILLING_MANAGERS));
     }
 

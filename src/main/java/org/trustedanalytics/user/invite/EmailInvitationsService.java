@@ -15,7 +15,6 @@
  */
 package org.trustedanalytics.user.invite;
 
-import com.google.common.base.Strings;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
@@ -24,21 +23,24 @@ import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
+import org.trustedanalytics.user.common.NoPendingInvitationFoundException;
+import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
+import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
+import org.trustedanalytics.user.invite.securitycode.SecurityCode;
 import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring4.SpringTemplateEngine;
-import rx.Observable;
-import rx.Subscription;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class EmailInvitationsService implements InvitationsService {
@@ -62,22 +64,37 @@ public class EmailInvitationsService implements InvitationsService {
     @Autowired
     private CcOperations ccPrivilegedClient;
 
+    @Autowired
+    private InvitationLinkGenerator invitationLinkGenerator;
+
     public EmailInvitationsService(SpringTemplateEngine templateEngine) {
         this.templateEngine = templateEngine;
     }
 
     @Override
-    public String sendInviteEmail(String email, String currentUser,
-        InvitationLinkGenerator invitationLinkGenerator) {
+    public String sendInviteEmail(String email, String currentUser) {
+        SecurityCode sc = securityCodeService.generateCode(email);
+        return sendEmail(email, currentUser, sc.getCode());
+    }
 
+    @Override
+    public String resendInviteEmail(String email, String currentUser) {
+        Optional<SecurityCode> sc = securityCodeService.findByMail(email);
+        if(!sc.isPresent()) {
+            throw new NoPendingInvitationFoundException("No pending invitation for "+email);
+        }
+
+        return sendEmail(email, currentUser, sc.get().getCode());
+    }
+
+    private String sendEmail(String email, String currentUser, String code) {
+        validateUsername(email);
         String subject = "Invitation to join Trusted Analytics platform";
-        String invitationLink =
-                invitationLinkGenerator.getLink(securityCodeService.generateCode(email).getCode());
+        String invitationLink = invitationLinkGenerator.getLink(code);
         String htmlContent = getEmailHtml(email, currentUser, invitationLink);
         messageService.sendMimeMessage(email, subject, htmlContent);
         LOGGER.info("Sent invitation to user " + email);
         return invitationLink;
-
     }
 
     private String getEmailHtml(String email, String currentUser, String invitationLink) {
@@ -107,6 +124,27 @@ public class EmailInvitationsService implements InvitationsService {
     public Optional<UUID> createUser(String username, String password) throws UserExistsException {
         validateUsername(username);
         return createAndRetrieveUser(username, password);
+    }
+
+    @Override
+    public boolean userExists(String username) {
+        return uaaPrivilegedClient.findUserIdByName(username).isPresent();
+    }
+
+    @Override
+    public Set<String> getPendingInvitationsEmails() {
+        return accessInvitationsService.getKeys();
+    }
+
+    @Override
+    public void deleteInvitation(String email) {
+        Optional<SecurityCode> sc = securityCodeService.findByMail(email);
+        if(!sc.isPresent()) {
+            throw new NoPendingInvitationFoundException("No pending invtiation for "+email);
+        }
+
+        securityCodeService.redeem(sc.get());
+        accessInvitationsService.redeemAccessInvitations(email);
     }
 
     private Optional<UUID> createAndRetrieveUser(String username, String password) {

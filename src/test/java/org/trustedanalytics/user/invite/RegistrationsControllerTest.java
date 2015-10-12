@@ -20,6 +20,7 @@ import org.trustedanalytics.user.common.PasswordValidator;
 import org.trustedanalytics.user.common.TooShortPasswordException;
 import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.invite.rest.EntityAlreadyExistsException;
+import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.invite.rest.InvitationModel;
 import org.trustedanalytics.user.invite.rest.RegistrationModel;
 import org.trustedanalytics.user.invite.rest.RegistrationsController;
@@ -45,8 +46,6 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.client.HttpClientErrorException;
-
-import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RegistrationsControllerTest {
@@ -174,7 +173,7 @@ public class RegistrationsControllerTest {
 
         sut.addUser(registration, SECURITY_CODE);
 
-        Mockito.verify(securityCodeService).use(sc);
+        Mockito.verify(securityCodeService).redeem(sc);
     }
 
     @Test

@@ -13,37 +13,56 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite.access;
+package org.trustedanalytics.user.invite.keyvaluestore;
 
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisOperations;
 
-public class RedisAccessInvitationsStore implements AccessInvitationsStore {
-    private static final String ACCESS_INVITATIONS_KEY = "access-invitations";
-    private final HashOperations<String, String, AccessInvitations> hashOps;
+import java.util.Map;
+import java.util.Set;
 
-    public RedisAccessInvitationsStore(RedisOperations<String, AccessInvitations> redisTemplate) {
+public class RedisStore<T> implements KeyValueStore<T> {
+    private final String storeKey;
+    
+    private final HashOperations<String, String, T> hashOps;
+
+    public RedisStore(RedisOperations<String, T> redisTemplate, String key) {
         hashOps = redisTemplate.opsForHash();
+        storeKey = key;
     }
-
 
     @Override
     public boolean hasKey(String key) {
-        return hashOps.hasKey(ACCESS_INVITATIONS_KEY, key);
+        return hashOps.hasKey(storeKey, key);
     }
 
     @Override
-    public AccessInvitations get(String key) {
-        return hashOps.get(ACCESS_INVITATIONS_KEY, key);
+    public T get(String key) {
+        return hashOps.get(storeKey, key);
     }
 
     @Override
     public void remove(String key) {
-        hashOps.delete(ACCESS_INVITATIONS_KEY, key);
+        hashOps.delete(storeKey, key);
     }
 
     @Override
-    public void put(String key, AccessInvitations invitations) {
-        hashOps.put(ACCESS_INVITATIONS_KEY, key, invitations);
+    public void put(String key, T invitations) {
+        hashOps.put(storeKey, key, invitations);
+    }
+
+    @Override
+    public boolean putIfAbsent(String key, T value) {
+        return hashOps.putIfAbsent(storeKey, key, value);
+    }
+
+    @Override
+    public Set<String> keys() {
+        return hashOps.keys(storeKey);
+    }
+
+    @Override
+    public Map<String, T> entries() {
+        return hashOps.entries(storeKey);
     }
 }

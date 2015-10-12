@@ -15,20 +15,50 @@
  */
 package org.trustedanalytics.user.invite.securitycode;
 
-public interface SecurityCodeService {
-    SecurityCode generateCode(String email);
+import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
 
-    /**
-     * Checks security code and deactivates it
-     * @param code
-     * @return
-     */
-    SecurityCode use(SecurityCode code);
+import java.util.Optional;
+import java.util.UUID;
 
-    /**
-     * Checks security code
-     * @param code
-     * @return
-     */
-    SecurityCode verify(String code);
+public class SecurityCodeService {
+    private final KeyValueStore<SecurityCode> store;
+
+    public SecurityCodeService( KeyValueStore<SecurityCode> store) {
+        this.store = store;
+    }
+
+    public SecurityCode generateCode(String email) {
+        int attempts = 3;
+        SecurityCode code;
+
+        for(int i = 0; i < attempts; i++) {
+            code = new SecurityCode(email, UUID.randomUUID().toString());
+            if(store.putIfAbsent(code.getCode(), code)) {
+                return code;
+            }
+        }
+        throw new SecurityCodeGenerationException("Security code generating conflict");
+    }
+
+    public SecurityCode redeem(SecurityCode code) {
+        store.remove(code.getCode());
+        return code;
+    }
+
+    public SecurityCode verify(String code) {
+        if (!store.hasKey(code)) {
+            throw new InvalidSecurityCodeException("Invalid security code " + code);
+        }
+
+        return store.get(code);
+    }
+
+    public Optional<SecurityCode> findByMail(String email) {
+        return store.entries()
+            .entrySet()
+            .stream()
+            .filter(entry -> entry.getValue().getEmail().equals(email))
+            .findFirst()
+            .map(entry -> entry.getValue());
+    }
 }

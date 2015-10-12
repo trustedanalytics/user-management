@@ -15,18 +15,24 @@
  */
 package org.trustedanalytics.user.invite.rest;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class ErrorDescriptionModel {
-    private String details;
-
-    public ErrorDescriptionModel(String details) {
-        this.details = details;
+    enum State {
+        NEW,
+        UPDATED,
+        ERROR
     }
 
-    public String getDetails() {
-        return details;
-    }
+    @Getter
+    final String details;
 
-    public void setDetails(String details) {
+    @Getter
+    final State state;
+
+    public ErrorDescriptionModel(State state, String details) {
         this.details = details;
+        this.state = state;
     }
 }
