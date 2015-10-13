@@ -19,6 +19,7 @@ import com.mangofactory.swagger.plugin.EnableSwagger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cloud.cloudfoundry.SmtpServiceInfoCreator;
 import org.springframework.cloud.security.oauth2.client.OAuth2ClientAutoConfiguration;
 import org.springframework.cloud.security.oauth2.resource.EnableOAuth2Resource;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -27,7 +28,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableOAuth2Resource
 @SpringBootApplication
 @EnableSwagger
-@EnableAutoConfiguration(exclude = OAuth2ClientAutoConfiguration.class)
+@EnableAutoConfiguration(exclude = {OAuth2ClientAutoConfiguration.class, SmtpServiceInfoCreator.class})
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
