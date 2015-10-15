@@ -16,11 +16,7 @@
 
 package org.trustedanalytics.user.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.trustedanalytics.cloud.cc.api.manageusers.Role;
-
-import java.util.List;
+import org.apache.commons.lang.StringUtils;
 
 public class UserPasswordValidator implements PasswordValidator {
 
@@ -35,7 +31,7 @@ public class UserPasswordValidator implements PasswordValidator {
     @Override
     public void validate(String password) {
 
-        if(password.isEmpty()) {
+        if(StringUtils.isBlank(password)) {
             throw new EmptyPasswordException("Password cannot be empty.");
         }
 
