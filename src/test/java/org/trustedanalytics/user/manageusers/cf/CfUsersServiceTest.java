@@ -50,6 +50,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.trustedanalytics.user.manageusers.UserRolesRequest;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -369,21 +370,87 @@ public class CfUsersServiceTest {
     }
 
     @Test(expected = NoSuchUserException.class)
-    public void updateOrgUser_userDoesNotExistInArray() {
+    public void updateOrgUserRoles_userDoesNotExistInOrg() {
         UUID orgGuid = UUID.randomUUID();
         UUID userGuid = UUID.randomUUID();
-        String username = "czeslaw@example.com";
-
-        User user = new User(username, userGuid, Lists.newArrayList(Role.BILLING_MANAGERS));
+        List<Role> roles = new ArrayList<>();
+        UserRolesRequest userRolesRequest = new UserRolesRequest();
+        userRolesRequest.setRoles(roles);
 
         when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
 
         CfUsersService cfUsersService =
                 new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
 
-        User resultUser = cfUsersService.updateOrgUser(user, orgGuid);
+        cfUsersService.updateOrgUserRoles(userGuid, orgGuid, userRolesRequest);
+    }
 
-        verify(resultUser.equals(null));
+    @Test(expected = NoSuchUserException.class)
+    public void updateSpaceUserRoles_userDoesNotExistInSpace() {
+        UUID spaceGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+        List<Role> roles = new ArrayList<>();
+        UserRolesRequest userRolesRequest = new UserRolesRequest();
+        userRolesRequest.setRoles(roles);
 
+        when(ccClient.getSpaceUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+
+        cfUsersService.updateSpaceUserRoles(userGuid, spaceGuid, userRolesRequest);
+    }
+
+    @Test
+    public void updateOrgUserRoles() {
+        UUID orgGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+        String username = "mariusz@example.com";
+        List<Role> currentRoles = Lists.newArrayList(Role.USERS, Role.AUDITORS);
+        User orgUser = new User(username, userGuid, currentRoles);
+        List<User> orgUsers = Lists.newArrayList(orgUser);
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+        when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(orgUsers);
+
+        List<Role> expectedRoles = Lists.newArrayList(Role.AUDITORS, Role.MANAGERS, Role.BILLING_MANAGERS);
+        UserRolesRequest userRolesRequest = new UserRolesRequest();
+        userRolesRequest.setRoles(expectedRoles);
+        List<Role> resultRoles = cfUsersService.updateOrgUserRoles(userGuid, orgGuid, userRolesRequest);
+
+        assertTrue(resultRoles.equals(expectedRoles));
+        verify(ccClient, never()).revokeOrgRole(userGuid, orgGuid, Role.USERS);
+        verify(ccClient, never()).assignOrgRole(userGuid, orgGuid, Role.USERS);
+        verify(ccClient, times(1)).revokeOrgRole(userGuid, orgGuid, Role.AUDITORS);
+        verify(ccClient, times(1)).assignOrgRole(userGuid, orgGuid, Role.AUDITORS);
+        verify(ccClient, times(1)).assignOrgRole(userGuid, orgGuid, Role.MANAGERS);
+        verify(ccClient, times(1)).assignOrgRole(userGuid, orgGuid, Role.BILLING_MANAGERS);
+    }
+
+    @Test
+    public void updateSpaceUserRoles() {
+        UUID spaceGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+        String username = "mariusz@example.com";
+        List<Role> currentRoles = Lists.newArrayList(Role.USERS, Role.DEVELOPERS);
+        User spaceUser = new User(username, userGuid, currentRoles);
+        List<User> spaceUsers = Lists.newArrayList(spaceUser);
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+        when(ccClient.getSpaceUsers(anyObject(), anyObject())).thenReturn(spaceUsers);
+
+        List<Role> expectedRoles = Lists.newArrayList(Role.DEVELOPERS, Role.AUDITORS, Role.MANAGERS);
+        UserRolesRequest userRolesRequest = new UserRolesRequest();
+        userRolesRequest.setRoles(expectedRoles);
+        List<Role> resultRoles = cfUsersService.updateSpaceUserRoles(userGuid, spaceGuid, userRolesRequest);
+
+        assertTrue(resultRoles.equals(expectedRoles));
+        verify(ccClient, never()).revokeSpaceRole(userGuid, spaceGuid, Role.USERS);
+        verify(ccClient, never()).assignSpaceRole(userGuid, spaceGuid, Role.USERS);
+        verify(ccClient, times(1)).revokeSpaceRole(userGuid, spaceGuid, Role.DEVELOPERS);
+        verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.DEVELOPERS);
+        verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.AUDITORS);
+        verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.MANAGERS);
     }
 }

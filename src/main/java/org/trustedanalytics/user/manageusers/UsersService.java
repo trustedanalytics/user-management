@@ -20,6 +20,7 @@ import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -34,9 +35,9 @@ public interface UsersService {
     
     void deleteUser(UUID guid);
     
-    User updateOrgUser(User user, UUID fromString);
+    List<Role> updateOrgUserRoles(UUID userGuid, UUID orgGuid, UserRolesRequest userRolesRequest);
 
-    User updateSpaceUser(User user, UUID fromString);
+    List<Role> updateSpaceUserRoles(UUID userGuid, UUID spaceGuid, UserRolesRequest userRolesRequest);
 
     void revokeOrgRolesFromUser(UUID userGuid, UUID orgGuid, Role ... roles);
 

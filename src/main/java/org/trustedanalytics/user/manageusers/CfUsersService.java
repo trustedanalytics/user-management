@@ -139,26 +139,38 @@ public class CfUsersService implements UsersService {
                 .anyMatch(member -> member.getGuid().equals(userGuid));
     }
 
+    private boolean isUserAssignedToSpace(UUID userGuid, UUID spaceGuid) {
+        return this.getSpaceUsers(spaceGuid)
+                .stream()
+                .anyMatch(member -> member.getGuid().equals(userGuid));
+    }
+
     @Override
-    public User updateOrgUser(User user, UUID orgGuid) {
-        if(isUserAssignedToOrg(user.getGuid(), orgGuid)) {
+    public List<Role> updateOrgUserRoles(UUID userGuid, UUID orgGuid, UserRolesRequest userRolesRequest) {
+        if(isUserAssignedToOrg(userGuid, orgGuid)) {
             Role[] rolesToRemove = Role.ORG_ROLES.stream()
-                    .filter(x -> !x.equals(Role.USERS) && !user.getRoles().contains(x))
+                    .filter(x -> !x.equals(Role.USERS))
                     .toArray(Role[]::new);
-            revokeOrgRolesFromUser(user.getGuid(), orgGuid, rolesToRemove);
-            assignOrgRolesToUser(user.getGuid(), orgGuid, user.getRoles().stream().toArray(Role[]::new));
-            return user;
+            revokeOrgRolesFromUser(userGuid, orgGuid, rolesToRemove);
+            assignOrgRolesToUser(userGuid, orgGuid, userRolesRequest.getRoles().stream().toArray(Role[]::new));
+            return userRolesRequest.getRoles();
         } else {
-            throw new NoSuchUserException("User not exists in organization.");
+            throw new NoSuchUserException(String.format("User %s does not exist in organization %s.",
+                    userGuid.toString(), orgGuid.toString()));
         }
     }
 
     @Override
-    public User updateSpaceUser(User user, UUID spaceGuid) {
-        Role.SPACE_ROLES.stream()
-            .forEach(role -> ccClient.revokeSpaceRole(user.getGuid(), spaceGuid, role));
-        assignSpaceRolesToUser(user.getGuid(), spaceGuid, user.getRoles().stream().toArray(Role[]::new));
-        return user;
+    public List<Role> updateSpaceUserRoles(UUID userGuid, UUID spaceGuid, UserRolesRequest userRolesRequest) {
+        if(isUserAssignedToSpace(userGuid, spaceGuid)) {
+            Role.SPACE_ROLES.stream()
+                    .forEach(role -> ccClient.revokeSpaceRole(userGuid, spaceGuid, role));
+            assignSpaceRolesToUser(userGuid, spaceGuid, userRolesRequest.getRoles().stream().toArray(Role[]::new));
+            return userRolesRequest.getRoles();
+        } else {
+            throw new NoSuchUserException(String.format("User %s does not exist in space %s.",
+                    userGuid.toString(), spaceGuid.toString()));
+        }
     }
 
     @Override

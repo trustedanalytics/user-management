@@ -22,6 +22,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
+import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
 import org.trustedanalytics.user.common.SpaceUserRolesValidator;
 import org.trustedanalytics.user.common.StringToUuidConverter;
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -112,22 +114,20 @@ public class UsersController {
             .addSpaceUser(userRequest, spaceUuid, currentUser).orElse(null);
     }
 
-    @RequestMapping(value = ORG_USERS_URL+"/{user}", method = PUT,
+    @RequestMapping(value = ORG_USERS_URL+"/{user}", method = POST,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public void updateOrgUser(@RequestBody UserRequest userRequest, @PathVariable String org, @PathVariable String user) {
-        UUID orgUuid = stringToUuidConverter.convert(org);
-        UUID userUuid = stringToUuidConverter.convert(user);
-        User userObj = new User(userRequest.getUsername(), userUuid, userRequest.getRoles());
-        usersService.updateOrgUser(userObj, orgUuid);
+    public List<Role> updateOrgUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String org, @PathVariable String user) {
+        UUID userGuid = stringToUuidConverter.convert(user);
+        UUID orgGuid = stringToUuidConverter.convert(org);
+        return usersService.updateOrgUserRoles(userGuid, orgGuid, userRolesRequest);
     }
 
-    @RequestMapping(value = SPACE_USERS_URL+"/{user}", method = PUT,
+    @RequestMapping(value = SPACE_USERS_URL+"/{user}", method = POST,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public void updateSpaceUser(@RequestBody UserRequest userRequest, @PathVariable String space, @PathVariable String user) {
-        UUID spaceUuid = stringToUuidConverter.convert(space);
-        UUID userUuid = stringToUuidConverter.convert(user);
-        User userObj = new User(userRequest.getUsername(), userUuid, userRequest.getRoles(), UUID.fromString(userRequest.getOrgGuid()));
-        usersService.updateSpaceUser(userObj, spaceUuid);
+    public List<Role> updateSpaceUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String space, @PathVariable String user) {
+        UUID userGuid = stringToUuidConverter.convert(user);
+        UUID spaceGuid = stringToUuidConverter.convert(space);
+        return usersService.updateSpaceUserRoles(userGuid, spaceGuid, userRolesRequest);
     }
 
     @RequestMapping(value = ORG_USERS_URL+"/{user}", method = DELETE)
