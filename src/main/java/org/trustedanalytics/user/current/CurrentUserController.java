@@ -20,7 +20,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import org.trustedanalytics.cloud.uaa.ChangePasswordRequest;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
-
+import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -36,10 +36,13 @@ public class CurrentUserController {
 
     private final UserDetailsFinder detailsFinder;
 
+    private final UserPasswordValidator passwordValidator;
+
     @Autowired
-    public CurrentUserController(UaaOperations uaaClient, UserDetailsFinder detailsFinder) {
+    public CurrentUserController(UaaOperations uaaClient, UserDetailsFinder detailsFinder, UserPasswordValidator passwordValidator) {
         this.uaaClient = uaaClient;
         this.detailsFinder = detailsFinder;
+        this.passwordValidator = passwordValidator;
     }
 
     @RequestMapping(method = RequestMethod.GET)
@@ -54,6 +57,7 @@ public class CurrentUserController {
     @RequestMapping(value = "/password", method = PUT,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public void changePassword(@RequestBody ChangePasswordRequest request, Authentication auth) {
+        passwordValidator.validate(request.getNewPassword());
         uaaClient.changePassword(detailsFinder.findUserId(auth), request);
     }
 
