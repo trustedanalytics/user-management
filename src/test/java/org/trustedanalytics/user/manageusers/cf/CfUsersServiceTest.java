@@ -421,7 +421,7 @@ public class CfUsersServiceTest {
         assertTrue(resultRoles.equals(expectedRoles));
         verify(ccClient, never()).revokeOrgRole(userGuid, orgGuid, Role.USERS);
         verify(ccClient, never()).assignOrgRole(userGuid, orgGuid, Role.USERS);
-        verify(ccClient, times(1)).revokeOrgRole(userGuid, orgGuid, Role.AUDITORS);
+        verify(ccClient, never()).revokeOrgRole(userGuid, orgGuid, Role.AUDITORS);
         verify(ccClient, times(1)).assignOrgRole(userGuid, orgGuid, Role.AUDITORS);
         verify(ccClient, times(1)).assignOrgRole(userGuid, orgGuid, Role.MANAGERS);
         verify(ccClient, times(1)).assignOrgRole(userGuid, orgGuid, Role.BILLING_MANAGERS);

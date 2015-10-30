@@ -149,7 +149,7 @@ public class CfUsersService implements UsersService {
     public List<Role> updateOrgUserRoles(UUID userGuid, UUID orgGuid, UserRolesRequest userRolesRequest) {
         if(isUserAssignedToOrg(userGuid, orgGuid)) {
             Role[] rolesToRemove = Role.ORG_ROLES.stream()
-                    .filter(x -> !x.equals(Role.USERS))
+                    .filter(x -> !x.equals(Role.USERS) && !userRolesRequest.getRoles().contains(x))
                     .toArray(Role[]::new);
             revokeOrgRolesFromUser(userGuid, orgGuid, rolesToRemove);
             assignOrgRolesToUser(userGuid, orgGuid, userRolesRequest.getRoles().stream().toArray(Role[]::new));
