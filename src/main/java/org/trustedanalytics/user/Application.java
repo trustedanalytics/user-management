@@ -15,7 +15,6 @@
  */
 package org.trustedanalytics.user;
 
-import com.mangofactory.swagger.plugin.EnableSwagger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -27,7 +26,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableOAuth2Resource
 @SpringBootApplication
-@EnableSwagger
 @EnableAutoConfiguration(exclude = {OAuth2ClientAutoConfiguration.class, SmtpServiceInfoCreator.class})
 public class Application {
     public static void main(String[] args) {
