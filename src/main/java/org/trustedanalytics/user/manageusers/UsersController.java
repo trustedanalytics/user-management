@@ -116,18 +116,22 @@ public class UsersController {
 
     @RequestMapping(value = ORG_USERS_URL+"/{user}", method = POST,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public List<Role> updateOrgUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String org, @PathVariable String user) {
+    public List<Role> updateOrgUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String org,
+                                         @PathVariable String user, Authentication auth) {
         UUID userGuid = stringToUuidConverter.convert(user);
         UUID orgGuid = stringToUuidConverter.convert(org);
-        return usersService.updateOrgUserRoles(userGuid, orgGuid, userRolesRequest);
+        return determinePriviledgeLevel(auth, AuthorizationScope.ORG, orgGuid)
+                .updateOrgUserRoles(userGuid, orgGuid, userRolesRequest);
     }
 
     @RequestMapping(value = SPACE_USERS_URL+"/{user}", method = POST,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
-    public List<Role> updateSpaceUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String space, @PathVariable String user) {
+    public List<Role> updateSpaceUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String space,
+                                           @PathVariable String user, Authentication auth) {
         UUID userGuid = stringToUuidConverter.convert(user);
         UUID spaceGuid = stringToUuidConverter.convert(space);
-        return usersService.updateSpaceUserRoles(userGuid, spaceGuid, userRolesRequest);
+        return  determinePriviledgeLevel(auth, AuthorizationScope.SPACE, spaceGuid)
+                .updateSpaceUserRoles(userGuid, spaceGuid, userRolesRequest);
     }
 
     @RequestMapping(value = ORG_USERS_URL+"/{user}", method = DELETE)
