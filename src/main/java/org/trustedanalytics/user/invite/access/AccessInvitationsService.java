@@ -16,12 +16,10 @@
 package org.trustedanalytics.user.invite.access;
 
 import com.google.common.base.Strings;
-import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public class AccessInvitationsService {
@@ -94,18 +92,6 @@ public class AccessInvitationsService {
     private void validateStringArgument(String arg) {
         if(Strings.isNullOrEmpty(arg)) {
             throw new IllegalArgumentException("String argument is null or empty");
-        }
-    }
-
-    private void validateUUID(UUID id) {
-        if (id == null) {
-            throw new IllegalArgumentException("UUID cannot be null");
-        }
-    }
-
-    private void validateRoles(Set<Role> roles) {
-        if (roles == null || roles.isEmpty()) {
-            throw new IllegalArgumentException("At least one role needs to be provided");
         }
     }
 }
