@@ -56,13 +56,11 @@ public class UsersConfig {
     private AuthTokenRetriever tokenRetriever;
 
     @Bean
-    @Scope(value = SCOPE_REQUEST, proxyMode = TARGET_CLASS)
     protected CcOperations ccPrivilegedClient(RestOperations clientRestTemplate) {
         return new CcClient(clientRestTemplate, apiBaseUrl);
     }
 
     @Bean
-    @Scope(value = SCOPE_REQUEST, proxyMode = TARGET_CLASS)
     protected UaaOperations uaaPrivilegedClient(RestOperations clientRestTemplate) {
         return new UaaClient(clientRestTemplate, uaaBaseUrl);
     }
