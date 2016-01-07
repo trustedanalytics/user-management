@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>user-management</artifactId>
-    <version>0.5.18</version>
+    <version>0.5.19</version>
     <parent>
         <groupId>org.trustedanalytics</groupId>
         <artifactId>trustedanalytics-cloud-parent</artifactId>
@@ -191,11 +191,11 @@
                         <include>src/**/*.java</include>
                         <include>src/**/*.html</include>
                         <include>license/*.sh</include>
-                    </includes>                   
+                    </includes>
                     <mapping>
                         <java>JAVADOC_STYLE</java>
                         <html>XML_STYLE</html>
-                        <sh>SCRIPT_STYLE</sh>   
+                        <sh>SCRIPT_STYLE</sh>
                     </mapping>
                 </configuration>
                 <executions>

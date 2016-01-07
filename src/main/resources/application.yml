@@ -46,7 +46,6 @@ app:
 
 endpoints.enabled: false
 endpoints.health.enabled: true
-endpoints.metrics.enabled: true
 
 spring.profiles.active: cloud,in-memory
 
