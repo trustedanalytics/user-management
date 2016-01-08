@@ -16,8 +16,6 @@
 package org.trustedanalytics.user;
 
 import static org.mockito.Mockito.mock;
-import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
-import static org.springframework.web.context.WebApplicationContext.SCOPE_REQUEST;
 
 import java.io.UnsupportedEncodingException;
 
@@ -28,17 +26,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.spring4.SpringTemplateEngine;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
-import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
-import org.trustedanalytics.user.common.SpaceUserRolesValidator;
+import org.trustedanalytics.user.common.FormatUserRolesValidator;
 import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.invite.*;
@@ -164,8 +158,8 @@ public class TestConfiguration {
     }
 
     @Bean
-    protected SpaceUserRolesValidator spaceRolesValidator() {
-        return mock(SpaceUserRolesValidator.class);
+    protected FormatUserRolesValidator formatRolesValidator() {
+        return mock(FormatUserRolesValidator.class);
     }
 
     @Bean

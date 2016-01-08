@@ -16,7 +16,7 @@
 package org.trustedanalytics.user.invite.config;
 
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
-import org.trustedanalytics.user.common.SpaceUserRolesValidator;
+import org.trustedanalytics.user.common.FormatUserRolesValidator;
 
 import org.trustedanalytics.user.invite.AngularInvitationLinkGenerator;
 import org.trustedanalytics.user.invite.EmailInvitationsService;
@@ -97,8 +97,8 @@ public class InvitationsConfig {
     }
 
     @Bean
-    protected SpaceUserRolesValidator spaceRolesValidator(){
-        return new SpaceUserRolesValidator();
+    protected FormatUserRolesValidator formatRolesValidator(){
+        return new FormatUserRolesValidator();
     }
 
     @Bean

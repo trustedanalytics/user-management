@@ -16,16 +16,14 @@
 package org.trustedanalytics.user.manageusers.cf;
 
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
-import org.trustedanalytics.user.common.SpaceUserRolesValidator;
+import org.trustedanalytics.user.common.FormatUserRolesValidator;
 import org.trustedanalytics.user.common.WrongUserRolesException;
 import org.trustedanalytics.user.common.WrongUuidFormatException;
 import org.trustedanalytics.user.current.UserDetailsFinder;
@@ -43,7 +41,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -63,11 +60,11 @@ public class UsersControllerTest {
     @Mock
     private BlacklistEmailValidator emailValidator;
 
-    private SpaceUserRolesValidator spaceRolesValidator = new SpaceUserRolesValidator();
+    private FormatUserRolesValidator formatRolesValidator = new FormatUserRolesValidator();
 
     @Before
     public void setup() {
-        sut = new UsersController(usersService, priviledgedUsersService, detailsFinder, emailValidator, spaceRolesValidator);
+        sut = new UsersController(usersService, priviledgedUsersService, detailsFinder, emailValidator, formatRolesValidator);
         AccessTokenDetails details = new AccessTokenDetails(UUID.randomUUID());
         when(userAuthentication.getDetails()).thenReturn(details);
         req = new UserRequest();

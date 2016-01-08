@@ -19,19 +19,16 @@ package org.trustedanalytics.user.common;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
-import org.trustedanalytics.user.invite.WrongEmailAddressException;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
 import java.util.List;
 
-public class SpaceUserRolesValidator implements UserRolesValidator {
-    private static final Log LOGGER = LogFactory.getLog(SpaceUserRolesValidator.class);
+public class FormatUserRolesValidator implements UserRolesValidator {
+    private static final Log LOGGER = LogFactory.getLog(FormatUserRolesValidator.class);
 
-    public SpaceUserRolesValidator() {}
+    public FormatUserRolesValidator() {}
 
     private void validateSpaceUserRoles(List<Role> roles) {
-        if(roles.isEmpty()) {
+        if(roles == null || roles.isEmpty()) {
             throw new WrongUserRolesException("You must have at least one role.");
         }
     }

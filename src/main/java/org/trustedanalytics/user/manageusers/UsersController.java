@@ -19,12 +19,11 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
-import org.trustedanalytics.user.common.SpaceUserRolesValidator;
+import org.trustedanalytics.user.common.FormatUserRolesValidator;
 import org.trustedanalytics.user.common.StringToUuidConverter;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 
@@ -49,17 +48,17 @@ public class UsersController {
     private final UsersService priviledgedUsersService;
     private final UserDetailsFinder detailsFinder;
     private final BlacklistEmailValidator emailValidator;
-    private final SpaceUserRolesValidator spaceRolesValidator;
+    private final FormatUserRolesValidator formatRolesValidator;
     private final StringToUuidConverter stringToUuidConverter = new StringToUuidConverter();
 
     @Autowired
     public UsersController(UsersService usersService, UsersService priviledgedUsersService,
-        UserDetailsFinder detailsFinder, BlacklistEmailValidator emailValidator, SpaceUserRolesValidator spaceRolesValidator) {
+        UserDetailsFinder detailsFinder, BlacklistEmailValidator emailValidator, FormatUserRolesValidator formatRolesValidator) {
         this.usersService = usersService;
         this.priviledgedUsersService = priviledgedUsersService;
         this.detailsFinder = detailsFinder;
         this.emailValidator = emailValidator;
-        this.spaceRolesValidator = spaceRolesValidator;
+        this.formatRolesValidator = formatRolesValidator;
     }
 
     enum AuthorizationScope {
@@ -109,7 +108,7 @@ public class UsersController {
         UUID spaceUuid = stringToUuidConverter.convert(space);
         String currentUser = detailsFinder.findUserName(auth);
         emailValidator.validate(userRequest.getUsername());
-        spaceRolesValidator.validate(userRequest.getRoles());
+        formatRolesValidator.validate(userRequest.getRoles());
         return determinePriviledgeLevel(auth, AuthorizationScope.SPACE, spaceUuid)
             .addSpaceUser(userRequest, spaceUuid, currentUser).orElse(null);
     }
@@ -118,6 +117,7 @@ public class UsersController {
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public List<Role> updateOrgUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String org,
                                          @PathVariable String user, Authentication auth) {
+        formatRolesValidator.validate(userRolesRequest.getRoles());
         UUID userGuid = stringToUuidConverter.convert(user);
         UUID orgGuid = stringToUuidConverter.convert(org);
         return determinePriviledgeLevel(auth, AuthorizationScope.ORG, orgGuid)
@@ -128,6 +128,7 @@ public class UsersController {
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public List<Role> updateSpaceUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String space,
                                            @PathVariable String user, Authentication auth) {
+        formatRolesValidator.validate(userRolesRequest.getRoles());
         UUID userGuid = stringToUuidConverter.convert(user);
         UUID spaceGuid = stringToUuidConverter.convert(space);
         return  determinePriviledgeLevel(auth, AuthorizationScope.SPACE, spaceGuid)
