@@ -162,9 +162,14 @@ public class CfUsersService implements UsersService {
 
     @Override
     public List<Role> updateSpaceUserRoles(UUID userGuid, UUID spaceGuid, UserRolesRequest userRolesRequest) {
-        if(isUserAssignedToSpace(userGuid, spaceGuid)) {
-            Role.SPACE_ROLES.stream()
-                    .forEach(role -> ccClient.revokeSpaceRole(userGuid, spaceGuid, role));
+        Optional<UUID> orgGuid = getOrgFromSpace(spaceGuid);
+        if(isUserAssignedToSpace(userGuid, spaceGuid) ||
+                (orgGuid.isPresent() && isUserAssignedToOrg(userGuid, orgGuid.get()))) {
+            Role[] rolesToRemove = Role.SPACE_ROLES.stream()
+                    .filter(x -> !userRolesRequest.getRoles().contains(x))
+                    .toArray(Role[]::new);
+            revokeSpaceRolesFromUser(userGuid, spaceGuid, rolesToRemove);
+
             assignSpaceRolesToUser(userGuid, spaceGuid, userRolesRequest.getRoles().stream().toArray(Role[]::new));
             return userRolesRequest.getRoles();
         } else {
@@ -242,6 +247,13 @@ public class CfUsersService implements UsersService {
     public void deleteUser(UUID guid) {
         ccClient.deleteUser(guid);
         uaaClient.deleteUser(guid);
+    }
+
+    private Optional<UUID>  getOrgFromSpace(UUID spaceGuid) {
+        return ccClient.getSpace(spaceGuid)
+                .map(space -> Optional.of(space.getOrgGuid()))
+                .toBlocking()
+                .singleOrDefault(Optional.empty());
     }
 
     private Collection<User> getUsers(UUID guid, Set<Role> roles,

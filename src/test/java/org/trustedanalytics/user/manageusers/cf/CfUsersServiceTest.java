@@ -51,6 +51,7 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.trustedanalytics.user.manageusers.UserRolesRequest;
+import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -386,18 +387,47 @@ public class CfUsersServiceTest {
     }
 
     @Test(expected = NoSuchUserException.class)
-    public void updateSpaceUserRoles_userDoesNotExistInSpace() {
+    public void updateSpaceUserRoles_userDoesNotExistInSpaceAndOrg() {
         UUID spaceGuid = UUID.randomUUID();
         UUID userGuid = UUID.randomUUID();
         List<Role> roles = new ArrayList<>();
         UserRolesRequest userRolesRequest = new UserRolesRequest();
         userRolesRequest.setRoles(roles);
 
+        when(ccClient.getSpace(anyObject())).thenReturn(Observable.empty());
         when(ccClient.getSpaceUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
+        when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
         CfUsersService cfUsersService =
                 new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
 
         cfUsersService.updateSpaceUserRoles(userGuid, spaceGuid, userRolesRequest);
+    }
+
+    @Test
+    public void updateSpaceUserRoles_userExistsButHaveNoRolesAssigned() {
+        UUID spaceGuid = UUID.randomUUID();
+        UUID userGuid = UUID.randomUUID();
+        UUID orgGuid = UUID.randomUUID();
+        CcSpace space = new CcSpace(spaceGuid, "randomName", orgGuid);
+        String username = "mariusz@example.com";
+        List<Role> orgRoles = Lists.newArrayList(Role.USERS);
+        User users = new User(username, userGuid, orgRoles);
+        List<User> orgUsers = Lists.newArrayList(users);
+
+        when(ccClient.getSpace(anyObject())).thenReturn(Observable.just(space));
+        when(ccClient.getSpaceUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
+        when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(orgUsers);
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+
+        List<Role> newRoles = Lists.newArrayList(Role.AUDITORS);
+        UserRolesRequest userAssignRolesRequest = new UserRolesRequest();
+        userAssignRolesRequest.setRoles(newRoles);
+        List<Role> resultRoles = cfUsersService.updateSpaceUserRoles(userGuid, spaceGuid, userAssignRolesRequest);
+
+        assertTrue(resultRoles.equals(newRoles));
+        verify(ccClient, never()).assignOrgRole(userGuid, spaceGuid, Role.USERS);
+        verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.AUDITORS);
     }
 
     @Test
@@ -431,6 +461,8 @@ public class CfUsersServiceTest {
     public void updateSpaceUserRoles() {
         UUID spaceGuid = UUID.randomUUID();
         UUID userGuid = UUID.randomUUID();
+        UUID orgGuid = UUID.randomUUID();
+        CcSpace space = new CcSpace(spaceGuid, "randomName", orgGuid);
         String username = "mariusz@example.com";
         List<Role> currentRoles = Lists.newArrayList(Role.USERS, Role.DEVELOPERS);
         User spaceUser = new User(username, userGuid, currentRoles);
@@ -439,6 +471,7 @@ public class CfUsersServiceTest {
         CfUsersService cfUsersService =
                 new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
         when(ccClient.getSpaceUsers(anyObject(), anyObject())).thenReturn(spaceUsers);
+        when(ccClient.getSpace(anyObject())).thenReturn(Observable.just(space));
 
         List<Role> expectedRoles = Lists.newArrayList(Role.DEVELOPERS, Role.AUDITORS, Role.MANAGERS);
         UserRolesRequest userRolesRequest = new UserRolesRequest();
@@ -448,7 +481,7 @@ public class CfUsersServiceTest {
         assertTrue(resultRoles.equals(expectedRoles));
         verify(ccClient, never()).revokeSpaceRole(userGuid, spaceGuid, Role.USERS);
         verify(ccClient, never()).assignSpaceRole(userGuid, spaceGuid, Role.USERS);
-        verify(ccClient, times(1)).revokeSpaceRole(userGuid, spaceGuid, Role.DEVELOPERS);
+        verify(ccClient, never()).revokeSpaceRole(userGuid, spaceGuid, Role.DEVELOPERS);
         verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.DEVELOPERS);
         verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.AUDITORS);
         verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.MANAGERS);
