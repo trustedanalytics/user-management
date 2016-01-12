@@ -31,6 +31,8 @@ import org.springframework.web.client.RestOperations;
 import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.spring4.SpringTemplateEngine;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
+import org.trustedanalytics.cloud.cc.api.CcOperations;
+import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
 import org.trustedanalytics.user.common.FormatUserRolesValidator;
 import org.trustedanalytics.user.common.UserPasswordValidator;
@@ -53,41 +55,30 @@ public class TestConfiguration {
 
     private static final String apiBaseUrl = "https://api.example.com";
 
-    public static String getUaaUsersUrl() {
-        return uaaBaseUrl + "/Users";
-    }
-
-    public static String getCreateUserUrl() {
-        return apiBaseUrl + "/v2/users";
-    }
-
-    public static String getCreateOrgUrl() {
-        return apiBaseUrl + "/v2/organizations";
-    }
-
-    public static String getCreateSpaceUrl() {
-        return apiBaseUrl + "/v2/spaces";
-    }
-
-    public static String getAddUserToOrgUrl() {
-        return apiBaseUrl + "/v2/organizations/{org}/users/{user}";
-    }
-
-    public static String getAddManagerToOrgUrl() {
-        return apiBaseUrl + "/v2/organizations/{org}/managers/{user}";
-    }
-
-    public static String getAddManagerToSpaceUrl() {
-        return apiBaseUrl + "/v2/spaces/{space}/managers/{user}";
-    }
-
-    public static String getAddDeveloperToSpaceUrl() {
-        return apiBaseUrl + "/v2/spaces/{space}/developers/{user}";
-    }
-
     @Bean
     protected UsersService usersService() {
         return mock(UsersService.class);
+    }
+
+    /*@Bean
+    protected RestOperations userRestTemplate() {
+        return mock(RestTemplate.class);
+    }*/
+
+    @Bean
+    protected CloudFoundryOperations cloudFoundryClient() {
+        return mock(CloudFoundryOperations.class);
+    }
+
+    /*@Bean
+    protected RestOperations clientRestTemplate() {
+        //we have to mock RestTempate class, because the bean is downcasted in UsersConfig.setAccessToken()
+        return mock(RestTemplate.class);
+    }*/
+
+    @Bean
+    protected CcOperations ccClient() {
+        return mock(CcOperations.class);
     }
 
     @Bean
@@ -95,16 +86,20 @@ public class TestConfiguration {
         return mock(RestTemplate.class);
     }
 
-    @Bean
-    protected CloudFoundryOperations cloudFoundryClient() {
-        return mock(CloudFoundryOperations.class);
-    }
+    /*@Bean
+    protected CcOperations ccPrivilegedClient() {
+        return mock(CcOperations.class);
+    }*/
 
     @Bean
-    protected RestOperations clientRestTemplate() {
-        //we have to mock RestTempate class, because the bean is downcasted in UsersConfig.setAccessToken()
-        return mock(RestTemplate.class);
+    protected UaaOperations uaaClient() {
+        return mock(UaaOperations.class);
     }
+/*
+    @Bean
+    protected UaaOperations uaaPrivilegedClient() {
+        return mock(UaaOperations.class);
+    }*/
 
     @Bean
     protected InvitationsService invitationsService(SpringTemplateEngine mailTemplateEngine) {
@@ -175,9 +170,5 @@ public class TestConfiguration {
     @Bean
     protected InvitationLinkGenerator invitationLinkGenerator() {
         return mock(InvitationLinkGenerator.class);
-    }
-
-    public static String getUaaGetUser(String username) {
-        return uaaBaseUrl + "/Users?attributes=id,userName&filter=userName eq '{name}'";
     }
 }

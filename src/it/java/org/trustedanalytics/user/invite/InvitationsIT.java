@@ -27,8 +27,11 @@ import static org.mockito.Mockito.when;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import org.hamcrest.CoreMatchers;
+import org.trustedanalytics.cloud.cc.api.CcOperations;
+import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.cloud.uaa.UserIdNameList;
+import org.trustedanalytics.cloud.uaa.UserIdNamePair;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUserFactory;
 import org.trustedanalytics.user.Application;
@@ -66,6 +69,8 @@ import org.trustedanalytics.user.manageusers.UsersService;
 import org.trustedanalytics.user.orgs.RestOperationsHelpers;
 import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.Page;
+import rx.Observable;
+
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Optional;
@@ -94,8 +99,15 @@ public class InvitationsIT {
     @Autowired
     private SecurityCodeService codeService;
 
+    //@Autowired
+    //private RestOperations clientRestTemplate;
+
     @Autowired
-    private RestOperations clientRestTemplate;
+    private CcOperations ccClient;
+
+    @Autowired
+    private UaaOperations uaaClient;
+
 
     @Autowired
     private AccessInvitationsService accessInvitationsService;
@@ -185,34 +197,17 @@ public class InvitationsIT {
         final UUID userGuid = UUID.randomUUID();
         final UUID spaceGuid = UUID.randomUUID();
         final String userGuidString = userGuid.toString();
-        final String orgGuidString = orgGuid.toString();
-        final String spaceGuidString = spaceGuid.toString();
         final String code = codeService.generateCode(username).getCode();
 
-        when(clientRestTemplate
-            .postForObject(Matchers.eq(TestConfiguration.getUaaUsersUrl()), any(ScimUser.class),
-                eq(ScimUser.class)))
+        when(uaaClient.createUser(anyString(), anyString()))
             .thenReturn(new ScimUser(userGuidString, username, null, null));
 
-
-        Page<CcOrg> page1 = new Page<CcOrg>();
-        page1.setResources(Lists.newArrayList());
-
-        when(clientRestTemplate
-               .exchange(Matchers.eq(TestConfiguration.getCreateOrgUrl()), eq(HttpMethod.GET), any(), eq(new ParameterizedTypeReference<Page<CcOrg>>() {
-               })))
-               .thenReturn(new ResponseEntity<Page<CcOrg>>(page1, HttpStatus.OK));
+        when(ccClient.getOrgs()).thenReturn(Observable.<CcOrg>empty());
 
         setUpNotExistingUserRequest(username);
 
-        when(clientRestTemplate
-                .postForObject(eq(TestConfiguration.getCreateOrgUrl()), anyObject(), eq(String.class)))
-            .thenReturn(getCfCreateJSONExpectedResponse(orgGuidString));
-
-        when(clientRestTemplate
-            .postForObject(eq(TestConfiguration.getCreateSpaceUrl()), anyObject(),
-                    eq(String.class)))
-            .thenReturn(getCfCreateJSONExpectedResponse(spaceGuidString));
+        when(ccClient.createOrganization(organization)).thenReturn(orgGuid);
+        when(ccClient.createSpace(orgGuid, defaultSpaceName)).thenReturn(spaceGuid);
 
 
         when(accessInvitations.isEligibleToCreateOrg()).thenReturn(true);
@@ -233,33 +228,17 @@ public class InvitationsIT {
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
 
-        verifyRestTemplateForUaaNewUser(username, password);
-        verifyRestTemplateForCreatingNewUser(userGuid);
-        verifyRestTemplateForCreatingNewOrg(organization);
-        verifyRestTemplateForAddingUserToOrg(
-            userGuid,
-            orgGuid,
-            TestConfiguration.getAddUserToOrgUrl());
-        verifyRestTemplateForAddingUserToOrg(
-            userGuid,
-            orgGuid,
-            TestConfiguration.getAddManagerToOrgUrl());
-        verifyRestTemplateForCreatingNewSpace(orgGuid, defaultSpaceName);
-        verifyRestTemplateForAddingUserToSpace(
-            userGuid,
-            spaceGuid,
-            TestConfiguration.getAddManagerToSpaceUrl());
-        verifyRestTemplateForAddingUserToSpace(
-            userGuid,
-            spaceGuid,
-            TestConfiguration.getAddDeveloperToSpaceUrl());
+        verify(uaaClient).createUser(username, password);
+        verify(ccClient).createUser(userGuid);
+        verify(ccClient).createOrganization(organization);
+        verify(ccClient).assignUserToOrganization(userGuid, orgGuid);
+        verify(ccClient).assignUserToSpace(userGuid, spaceGuid);
     }
 
     private void setUpNotExistingUserRequest(String username) {
         UserIdNameList userList = new UserIdNameList();
         userList.setUsers(Lists.newArrayList());
-        when(clientRestTemplate.getForObject(eq(TestConfiguration.getUaaGetUser(username)), eq(UserIdNameList.class), eq(ImmutableMap.of("name", username))))
-                .thenReturn(userList);
+        when(uaaClient.findUserIdByName(username)).thenReturn(Optional.<UserIdNamePair>empty());
     }
 
     private static String getCfCreateJSONExpectedResponse(String guidString) {
@@ -273,54 +252,5 @@ public class InvitationsIT {
                 "}" +
                 "}";
         //@formatter:on
-    }
-
-    private void verifyRestTemplateForUaaNewUser(String username, String password) {
-        ScimUser expectedScimUser = ScimUserFactory.newUser(username, password);
-        verify(clientRestTemplate)
-            .postForObject(eq(TestConfiguration.getUaaUsersUrl()), eq(expectedScimUser),
-                eq(ScimUser.class));
-    }
-
-    private void verifyRestTemplateForCreatingNewUser(UUID userGuid) {
-        HashMap<String, Object> expectedCreateUserArgs = new HashMap<>();
-        expectedCreateUserArgs.put("guid", userGuid);
-        verify(clientRestTemplate).postForObject(eq(TestConfiguration.getCreateUserUrl()),
-            eq(expectedCreateUserArgs), eq(String.class));
-    }
-
-    private void verifyRestTemplateForCreatingNewOrg(String organization) {
-        HashMap<String, Object> expectedNewOrgArgs = new HashMap<>();
-        expectedNewOrgArgs.put("name", organization);
-        verify(clientRestTemplate)
-            .postForObject(eq(TestConfiguration.getCreateOrgUrl()),
-                eq(expectedNewOrgArgs), eq(String.class));
-    }
-
-    private void verifyRestTemplateForCreatingNewSpace(UUID orgGuid, String spaceName) {
-        HashMap<String, Object> expectedNewSpaceArgs = new HashMap<>();
-        expectedNewSpaceArgs.put("name", spaceName);
-        expectedNewSpaceArgs.put("organization_guid", orgGuid);
-        verify(clientRestTemplate)
-            .postForObject(eq(TestConfiguration.getCreateSpaceUrl()),
-                eq(expectedNewSpaceArgs), eq(String.class));
-    }
-
-    private void verifyRestTemplateForAddingUserToOrg(UUID userGuid, UUID orgGuid, String url) {
-        HashMap<String, Object> expectedAddUserToOrgArgs = new HashMap<>();
-        expectedAddUserToOrgArgs.put("org", orgGuid);
-        expectedAddUserToOrgArgs.put("user", userGuid);
-        verify(clientRestTemplate)
-            .put(eq(url),
-                eq(null), eq(expectedAddUserToOrgArgs));
-    }
-
-    private void verifyRestTemplateForAddingUserToSpace(UUID userGuid, UUID spaceGuid, String url) {
-        HashMap<String, Object> expectedAddUserToSpace = new HashMap<>();
-        expectedAddUserToSpace.put("space", spaceGuid);
-        expectedAddUserToSpace.put("user", userGuid);
-        verify(clientRestTemplate)
-            .put(eq(url),
-                eq(null), eq(expectedAddUserToSpace));
     }
 }

@@ -15,21 +15,20 @@
  */
 package org.trustedanalytics.user.manageusers.cf;
 
+import static java.util.Arrays.asList;
 import static org.hamcrest.CoreMatchers.equalTo;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import org.apache.http.annotation.Immutable;
 import org.hamcrest.CoreMatchers;
 import org.mockito.Mockito;
+import org.mockito.stubbing.OngoingStubbing;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
@@ -54,20 +53,22 @@ import org.trustedanalytics.user.manageusers.UserRolesRequest;
 import rx.Observable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CfUsersServiceTest {
 
     @Mock
     private UaaOperations uaaOperations;
-
-    @Mock
-    private PasswordGenerator passwordGenerator;
 
     @Mock
     private CcOperations ccClient;
@@ -78,8 +79,12 @@ public class CfUsersServiceTest {
     @Mock
     private AccessInvitationsService accessInvitationsService;
 
-    @Mock
-    private UaaOperations uaaClient;
+    class UserComparator implements Comparator<User> {
+        @Override
+        public int compare(User o1, User o2) {
+            return o1.getGuid().compareTo(o2.getGuid());
+        }
+    }
 
     @Test
     public void test_addOrgUser_userDontExist() {
@@ -92,10 +97,9 @@ public class CfUsersServiceTest {
         cfCreateUser.setRoles(roles);
 
         when(uaaOperations.findUserIdByName(expectedUser.getUsername())).thenReturn(Optional.empty());
-        when(passwordGenerator.newPassword()).thenReturn(password);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
         Optional<User> resultUser = cfUsersService.addOrgUser(cfCreateUser, orgGuid, "admin_test");
         //user was not created, invitation was sent
         assertFalse(resultUser.isPresent());
@@ -117,14 +121,14 @@ public class CfUsersServiceTest {
         ScimUser scimUser = ScimUserFactory.newUser(expectedUser.getUsername(), password);
         scimUser.setId(expectedUser.getGuid().toString());
 
-        UserIdNamePair idNamePair = new UserIdNamePair();
-        idNamePair.setGuid(expectedUser.getGuid());
-        idNamePair.setUserName(expectedUser.getUsername());
+        UserIdNamePair idNamePair = UserIdNamePair.of(
+            expectedUser.getGuid(),
+            expectedUser.getUsername());
         when(uaaOperations.findUserIdByName(expectedUser.getUsername())).thenReturn(Optional.ofNullable(idNamePair));
 
         when(uaaOperations.createUser(expectedUser.getUsername(), password)).thenReturn(scimUser);
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
         Optional<User> resultUser = cfUsersService.addOrgUser(cfCreateUser, orgGuid, "admin_test");
         assertThat(resultUser.get(), equalTo(expectedUser));
 
@@ -142,7 +146,7 @@ public class CfUsersServiceTest {
         when(ccClient.getOrgUsers(orgId, Role.MANAGERS)).thenReturn(fakeUsers);
 
         CfUsersService sut =
-            new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+            new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         assertTrue(sut.isOrgManager(userId, orgId));
         verify(ccClient).getOrgUsers(orgId, Role.MANAGERS);
@@ -157,7 +161,7 @@ public class CfUsersServiceTest {
         when(ccClient.getOrgUsers(orgId, Role.MANAGERS)).thenReturn(emptyList);
 
         CfUsersService sut =
-            new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+            new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         assertFalse(sut.isOrgManager(userId, orgId));
         verify(ccClient).getOrgUsers(orgId, Role.MANAGERS);
@@ -197,7 +201,7 @@ public class CfUsersServiceTest {
         when(ccClient.getOrgUsers(orgGuid, Role.USERS)).thenReturn(users);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
         cfUsersService.deleteUserFromOrg(userGuid, orgGuid);
 
         verify(ccClient, times(1)).revokeSpaceRole(eq(userGuid), any(), eq(Role.MANAGERS));
@@ -225,7 +229,7 @@ public class CfUsersServiceTest {
         when(ccClient.getOrgUsers(orgGuid, Role.AUDITORS)).thenReturn(Collections.emptyList());
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
         cfUsersService.deleteUserFromOrg(userGuid, orgGuid);
     }
 
@@ -245,7 +249,7 @@ public class CfUsersServiceTest {
         when(ccClient.getSpaceUsers(spaceGuid, Role.AUDITORS)).thenReturn(users);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
         cfUsersService.deleteUserFromSpace(userGuid, spaceGuid);
 
         verify(ccClient, times(1)).revokeSpaceRole(eq(userGuid), eq(spaceGuid), eq(Role.MANAGERS));
@@ -263,7 +267,7 @@ public class CfUsersServiceTest {
         when(ccClient.getSpaceUsers(spaceGuid, Role.AUDITORS)).thenReturn(Collections.emptyList());
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
         cfUsersService.deleteUserFromSpace(userGuid, spaceGuid);
     }
 
@@ -277,7 +281,7 @@ public class CfUsersServiceTest {
         when(accessInvitationsService.createOrUpdateInvitation(eq(username), any())).thenReturn(AccessInvitationsService.CreateOrUpdateState.CREATED);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         UserRequest ur = new UserRequest();
         ur.setOrgGuid(orgGuid.toString());
@@ -297,15 +301,13 @@ public class CfUsersServiceTest {
         UUID userGuid = UUID.randomUUID();
         String username = "czeslaw@example.com";
         String currentUsername = "kazimierz@example.com";
-        UserIdNamePair pair = new UserIdNamePair();
-        pair.setGuid(userGuid);
-        pair.setUserName(username);
+        UserIdNamePair pair = UserIdNamePair.of(userGuid, username);
 
         when(uaaOperations.findUserIdByName(eq(username))).thenReturn(Optional.of(pair));
         when(accessInvitationsService.createOrUpdateInvitation(eq(username), any())).thenReturn(AccessInvitationsService.CreateOrUpdateState.UPDATED);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         UserRequest ur = new UserRequest();
         ur.setOrgGuid(orgGuid.toString());
@@ -329,7 +331,7 @@ public class CfUsersServiceTest {
         when(accessInvitationsService.createOrUpdateInvitation(eq(username), any())).thenReturn(AccessInvitationsService.CreateOrUpdateState.CREATED);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         UserRequest ur = new UserRequest();
         ur.setOrgGuid(orgGuid.toString());
@@ -348,15 +350,13 @@ public class CfUsersServiceTest {
         UUID userGuid = UUID.randomUUID();
         String username = "czeslaw@example.com";
         String currentUsername = "kazimierz@example.com";
-        UserIdNamePair pair = new UserIdNamePair();
-        pair.setGuid(userGuid);
-        pair.setUserName(username);
+        UserIdNamePair pair = UserIdNamePair.of(userGuid, username);
 
         when(uaaOperations.findUserIdByName(eq(username))).thenReturn(Optional.of(pair));
         when(accessInvitationsService.createOrUpdateInvitation(eq(username), any())).thenReturn(AccessInvitationsService.CreateOrUpdateState.UPDATED);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         UserRequest ur = new UserRequest();
         ur.setOrgGuid(orgGuid.toString());
@@ -381,7 +381,7 @@ public class CfUsersServiceTest {
         when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         cfUsersService.updateOrgUserRoles(userGuid, orgGuid, userRolesRequest);
     }
@@ -398,7 +398,7 @@ public class CfUsersServiceTest {
         when(ccClient.getSpaceUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
         when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         cfUsersService.updateSpaceUserRoles(userGuid, spaceGuid, userRolesRequest);
     }
@@ -418,7 +418,7 @@ public class CfUsersServiceTest {
         when(ccClient.getSpaceUsers(anyObject(), anyObject())).thenReturn(new ArrayList<User>());
         when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(orgUsers);
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
 
         List<Role> newRoles = Lists.newArrayList(Role.AUDITORS);
         UserRolesRequest userAssignRolesRequest = new UserRolesRequest();
@@ -440,7 +440,7 @@ public class CfUsersServiceTest {
         List<User> orgUsers = Lists.newArrayList(orgUser);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
         when(ccClient.getOrgUsers(anyObject(), anyObject())).thenReturn(orgUsers);
 
         List<Role> expectedRoles = Lists.newArrayList(Role.AUDITORS, Role.MANAGERS, Role.BILLING_MANAGERS);
@@ -469,7 +469,7 @@ public class CfUsersServiceTest {
         List<User> spaceUsers = Lists.newArrayList(spaceUser);
 
         CfUsersService cfUsersService =
-                new CfUsersService(ccClient, uaaOperations, passwordGenerator, invitationService, accessInvitationsService);
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
         when(ccClient.getSpaceUsers(anyObject(), anyObject())).thenReturn(spaceUsers);
         when(ccClient.getSpace(anyObject())).thenReturn(Observable.just(space));
 
@@ -486,4 +486,79 @@ public class CfUsersServiceTest {
         verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.AUDITORS);
         verify(ccClient, times(1)).assignSpaceRole(userGuid, spaceGuid, Role.MANAGERS);
     }
+
+
+    @Test
+    public void test_getOrgUsers() {
+
+        UUID orgId = UUID.fromString("dcb23ded-4afc-4844-b88c-63840a87a6d0");
+
+        List<String> userIds = ImmutableList.of("6a1c2f2c-5a65-4844-ad3f-f011e1b082e1",
+                "f9db1460-9c10-4640-8621-2903f6f6571c", "3f4095d4-5b16-4d61-bf63-dda65aa782a8",
+                "8982e872-f12d-4bce-8aa4-b53e349d10e5", "3f073ac6-88a9-40ba-83bc-52699a03da04");
+
+        List<String> originalNames = ImmutableList.of("Czeslaw", "Leslaw", "Wieslaw", "Zdzislaw", "Miroslaw" );
+
+        List<String> expectedNames = ImmutableList.of("Viacheslav", "Lavrenty", "Vadim", "Zakhary", "Maksim");
+
+        List<List<Role>> originalRoles = ImmutableList.of(
+            ImmutableList.of(Role.USERS, Role.MANAGERS),
+            ImmutableList.of(Role.USERS, Role.MANAGERS, Role.BILLING_MANAGERS),
+            ImmutableList.of(Role.USERS),
+            ImmutableList.of(Role.USERS, Role.BILLING_MANAGERS),
+            ImmutableList.of(Role.USERS, Role.AUDITORS, Role.BILLING_MANAGERS)
+        );
+
+        List<List<Role>> expectedRoles = ImmutableList.of(
+                ImmutableList.of(Role.MANAGERS),
+                ImmutableList.of(Role.MANAGERS, Role.BILLING_MANAGERS),
+                ImmutableList.of(),
+                ImmutableList.of(Role.BILLING_MANAGERS),
+                ImmutableList.of(Role.AUDITORS, Role.BILLING_MANAGERS)
+        );
+
+        List<User> mockUsersList = new ArrayList<User>();
+        List<User> expected = new ArrayList<User>();
+        List<UserIdNamePair> idNamePairs = new ArrayList<>();
+        for(int i =0; i < 5; i++) {
+            UUID userGuid = UUID.fromString(userIds.get(i));
+            mockUsersList.add(new User(originalNames.get(i), userGuid , originalRoles.get(i)));
+            idNamePairs.add(UserIdNamePair.of(userGuid, expectedNames.get(i)));
+            expected.add(new User(expectedNames.get(i), userGuid, expectedRoles.get(i)));
+        }
+
+        Role.ORG_ROLES.forEach(role -> when(ccClient.getOrgUsers(orgId, role))
+                .thenReturn(getUsersFilteredByRole(mockUsersList, role)));
+
+        Collection<UUID> userUUIDs = userIds.stream()
+                .map(uid -> UUID.fromString(uid))
+                .collect(Collectors.toSet());
+
+        when(uaaOperations.findUserNames(userUUIDs))
+                .thenReturn(idNamePairs);
+
+        CfUsersService cfUsersService =
+                new CfUsersService(ccClient, uaaOperations, invitationService, accessInvitationsService);
+        ArrayList<User> result = new ArrayList<User>(cfUsersService.getOrgUsers(orgId));
+
+
+        Collections.sort(expected, new UserComparator());
+        Collections.sort(result, new UserComparator());
+
+        assertEquals(expected.size(), result.size());
+        int l = expected.size();
+        for(int i = 0; i < l; i++) {
+            assertEquals(expected.get(i).getUsername(), result.get(i).getUsername());
+            assertEquals(expected.get(i).getGuid(), result.get(i).getGuid());
+            assertEquals(expected.get(i).getOrgGuid(), result.get(i).getOrgGuid());
+            assertEquals(new HashSet<Role>(expected.get(i).getRoles()), new HashSet<Role>(result.get(i).getRoles()));
+        }
+    }
+
+    private List<User> getUsersFilteredByRole(List<User> all, Role role) {
+        return all.stream().filter(u -> u.getRoles().contains(role))
+                .map(u -> new User(u.getUsername(), u.getGuid(), new ArrayList<Role>(asList(role))))
+                        .collect(Collectors.toList());
+    }
+
 }

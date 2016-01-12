@@ -19,9 +19,11 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
+import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.Page;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
 import org.trustedanalytics.user.Application;
@@ -44,9 +46,11 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.client.RestOperations;
+import rx.Observable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
@@ -62,8 +66,12 @@ public class SpacesIT {
     @Autowired
     private String TOKEN;
 
+    //@Autowired
+    //private RestOperations userRestTemplate;
+
     @Autowired
-    private RestOperations userRestTemplate;
+    private CcOperations ccClient;
+
 
     @Autowired
     private AuthTokenRetriever tokenRetriever;
@@ -79,14 +87,10 @@ public class SpacesIT {
     @Test
     public void getAllSpaces_shouldAskCloudfoundryForAllSpaces() {
 
-        final String CF_SPACES_URL = cfApiBaseUrl+"/v2/spaces";
-
-        Page<CcSpace> SPACES_FROM_CF = new Page<>();
-        SPACES_FROM_CF.setResources(SpacesTestsResources.getSpacesReturnedByCf().getSpaces());
         final String EXPECTED_SPACES = SpacesTestsResources.getSpacesExpectedToBeReturnedBySc();
 
-        when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcSpace>>() {} )))
-                .thenReturn(new ResponseEntity<>(SPACES_FROM_CF, HttpStatus.OK));
+        when(ccClient.getSpaces())
+                .thenReturn(Observable.from(SpacesTestsResources.getSpacesReturnedByCf().getSpaces()));
 
         TestRestTemplate testRestTemplate = new TestRestTemplate();
         ResponseEntity<String> response = RestOperationsHelpers.getForEntityWithToken(testRestTemplate, TOKEN,
@@ -95,14 +99,10 @@ public class SpacesIT {
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
         assertThat(response.getBody(), equalTo(EXPECTED_SPACES));
 
-        PlatformVerifiers.verifySetTokenThenExchange(userRestTemplate, TOKEN, CF_SPACES_URL);
     }
     
     @Test
     public void getSpacesForSpecificOrg_shouldAskCloudfoundryForSpaces() {
-
-        final String CF_SPACES_OF_ORG_URL =
-            cfApiBaseUrl+"/v2/organizations/{org}/spaces?inline-relations-depth=1";
 
         final String ORG = "6b436ee1-de3c-4996-b312-bacd54ef301a";
         Map<String, Object> pathVars = new HashMap<>();
@@ -112,8 +112,9 @@ public class SpacesIT {
         SPACES_FROM_CF.setResources(SpacesTestsResources.getSpacesReturnedByCf().getSpaces());
         final String EXPECTED_SPACES = SpacesTestsResources.getSpacesExpectedToBeReturnedBySc();
 
-        when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcSpace>>() {}), any(Map.class)))
-            .thenReturn(new ResponseEntity<>(SPACES_FROM_CF, HttpStatus.OK));
+        Observable<CcSpace> toReturn = Observable.from(SpacesTestsResources.getSpacesReturnedByCf().getSpaces());
+        when(ccClient.getSpaces(UUID.fromString(ORG)))
+                .thenReturn(toReturn);
 
         TestRestTemplate testRestTemplate = new TestRestTemplate();
         ResponseEntity<String> response = RestOperationsHelpers.getForEntityWithToken(testRestTemplate, TOKEN,
@@ -121,7 +122,5 @@ public class SpacesIT {
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
         assertThat(response.getBody(), equalTo(EXPECTED_SPACES));
-
-        PlatformVerifiers.verifySetTokenThenExchange(userRestTemplate, TOKEN, CF_SPACES_OF_ORG_URL, pathVars);
     }
 }

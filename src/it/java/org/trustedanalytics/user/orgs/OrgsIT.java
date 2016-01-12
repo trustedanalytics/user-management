@@ -24,7 +24,9 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
+import com.google.common.collect.Lists;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
+import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcOrgsList;
 import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
@@ -53,10 +55,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.web.client.RestOperations;
+import rx.Observable;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringApplicationConfiguration(classes = Application.class)
@@ -81,17 +86,17 @@ public class OrgsIT {
     @Autowired
     private String TOKEN;
 
+    //@Autowired
+    //;private RestOperations userRestTemplate;
+
     @Autowired
-    private RestOperations userRestTemplate;
+    private CcOperations ccClient;
 
     @Autowired
     private AuthTokenRetriever tokenRetriever;
 
     @Autowired
     private UserDetailsFinder detailsFinder;
-
-    @Autowired
-    private RestOperations clientRestTemplate;
 
     @Before
     public void setUp() {
@@ -106,18 +111,23 @@ public class OrgsIT {
 
         when(detailsFinder.findUserId(Mockito.any())).thenReturn(UUID.randomUUID());
 
-        String getUserOrgsUrl = cfUsersUrl + "/{userId}/organizations";
-        doReturn(orgsReturnedByCf).when(userRestTemplate)
-            .getForObject(eq(getUserOrgsUrl), eq(CcOrgsList.class), any(UUID.class));
-        String getManagedOrgsUrl = cfUsersUrl + "/{userId}/managed_organizations";
-        doReturn(orgsReturnedByCf).when(userRestTemplate)
-            .getForObject(eq(getManagedOrgsUrl), eq(CcOrgsList.class), any(UUID.class));
-        doReturn(emptyOrgList).when(userRestTemplate)
-            .getForObject(eq(cfUsersUrl + "/{userId}/audited_organizations"), eq(CcOrgsList.class),
-                    any(UUID.class));
-        doReturn(emptyOrgList).when(userRestTemplate)
-            .getForObject(eq(cfUsersUrl + "/{userId}/billing_managed_organizations"),
-                    eq(CcOrgsList.class), any(UUID.class));
+
+        /*Observable<CcOrg> orgs = Observable.from(orgsReturnedByCf.getOrgs());
+        when(ccClient.getOrgs()).thenReturn(orgs);
+
+        when(ccClient.getManagedOrganizations(any())).thenReturn(orgsReturnedByCf.getOrgs());
+        when(ccClient.getAuditedOrganizations(any())).thenReturn(emptyOrgList.getOrgs());
+        when(ccClient.getBillingManagedOrganizations(any())).thenReturn(emptyOrgList.getOrgs());*/
+
+        when(ccClient.getUserPermissions(any(), any()))
+                .thenReturn(
+                        orgsReturnedByCf.getOrgs().stream().map(org ->
+                                new CcOrgPermission(org,
+                                        /*isManager*/true,
+                                        /*isAuditor*/ false,
+                                        /*isBillingManager*/false)).collect(Collectors.toList())
+
+                );
 
         TestRestTemplate testRestTemplate = new TestRestTemplate();
         CcOrgPermission[] valueReturned =
@@ -139,17 +149,26 @@ public class OrgsIT {
         final String EXPECTED_ORGS_WITH_SPACES =
             OrgsTestsResources.getOrgsWithSpacesExpectedToBeReturnedBySc();
 
-        when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcSpace>>() {} )))
-                .thenReturn(new ResponseEntity<>(SPACES_FROM_CF, HttpStatus.OK));
-        when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcOrg>>() {} )))
-                .thenReturn(new ResponseEntity<>(ORGS_FROM_CF, HttpStatus.OK));
+        //when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcSpace>>() {} )))
+        //        .thenReturn(new ResponseEntity<>(SPACES_FROM_CF, HttpStatus.OK));
+        //when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcOrg>>() {} )))
+        //        .thenReturn(new ResponseEntity<>(ORGS_FROM_CF, HttpStatus.OK));
+
+        Observable<CcOrg> orgs = Observable.from(OrgsTestsResources.getOrgsReturnedByCf().getOrgs());
+        when(ccClient.getOrgs())
+                .thenReturn(orgs);
+
+
+        Observable<CcSpace> spaces = Observable.from(OrgsTestsResources.getSpacesReturnedByCf().getSpaces());
+        when(ccClient.getSpaces())
+                .thenReturn(spaces);
+
+
         when(detailsFinder.findUserId(Mockito.any())).thenReturn(UUID.randomUUID());
 
-        CcOrgsList orgsList = new CcOrgsList();
-        orgsList.setOrgs(Collections.emptyList());
-        String managedOrgsPath = cfUsersUrl + "/{userId}/managed_organizations";
-        when(userRestTemplate.getForObject(eq(managedOrgsPath), eq(CcOrgsList.class),
-            any(UUID.class))).thenReturn(orgsList);
+
+        when(ccClient.getManagedOrganizations(any()))
+                .thenReturn(Collections.EMPTY_LIST);
 
         TestRestTemplate testRestTemplate = new TestRestTemplate();
         ResponseEntity<String> response = RestOperationsHelpers
@@ -158,9 +177,5 @@ public class OrgsIT {
 
         assertThat(response.getStatusCode(), equalTo(HttpStatus.OK));
         assertThat(response.getBody(), equalTo(EXPECTED_ORGS_WITH_SPACES));
-
-        PlatformVerifiers
-            .verifySetTokenThenExchange(userRestTemplate, TOKEN, cfOrgsUrl);
-        PlatformVerifiers.verifySetTokenThenExchange(userRestTemplate, TOKEN, cfSpacesUrl);
     }
 }

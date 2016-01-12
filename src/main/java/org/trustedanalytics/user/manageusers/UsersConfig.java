@@ -19,12 +19,17 @@ import static java.util.Collections.singletonList;
 import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 import static org.springframework.web.context.WebApplicationContext.SCOPE_REQUEST;
 
+import org.springframework.context.annotation.Profile;
+import org.springframework.security.oauth2.client.OAuth2RestTemplate;
+import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.cloud.auth.HeaderAddingHttpInterceptor;
-import org.trustedanalytics.cloud.cc.CcClient;
+import org.trustedanalytics.cloud.cc.FeignClient;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.uaa.UaaClient;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
+import org.trustedanalytics.user.common.OAuth2PriviligedInterceptor;
 import org.trustedanalytics.user.invite.EmailOrgUserInvitationService;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.MessageService;
@@ -44,6 +49,7 @@ import org.springframework.web.client.RestOperations;
 import org.thymeleaf.TemplateEngine;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 
+@Profile("cloud")
 @Configuration
 public class UsersConfig {
     @Value("${oauth.uaa}")
@@ -56,8 +62,16 @@ public class UsersConfig {
     private AuthTokenRetriever tokenRetriever;
 
     @Bean
-    protected CcOperations ccPrivilegedClient(RestOperations clientRestTemplate) {
-        return new CcClient(clientRestTemplate, apiBaseUrl);
+    protected OAuth2PriviligedInterceptor oauth2PrivilegedInterceptor(OAuth2ProtectedResourceDetails clientCredentials) {
+        return new OAuth2PriviligedInterceptor(clientCredentials);
+    }
+
+    @Bean
+    protected CcOperations ccPrivilegedClient(OAuth2PriviligedInterceptor oauth2PrivilegedInterceptor) {
+
+        return new FeignClient(apiBaseUrl,
+                builder -> builder
+                        .requestInterceptor(oauth2PrivilegedInterceptor));
     }
 
     @Bean
@@ -67,8 +81,11 @@ public class UsersConfig {
 
     @Bean
     @Scope(value = SCOPE_REQUEST, proxyMode = TARGET_CLASS)
-    protected CcOperations ccClient(RestTemplate userRestTemplate) {
-        return new CcClient(setAccessToken(userRestTemplate), apiBaseUrl);
+    protected CcOperations ccClient() {
+        return new FeignClient(apiBaseUrl,
+                builder -> builder
+                        .requestInterceptor(template -> template
+                                .header("Authorization", "bearer " + getAccessToken())));
     }
 
     @Bean
@@ -87,33 +104,33 @@ public class UsersConfig {
     }
 
     private RestTemplate setAccessToken(RestTemplate restTemplate) {
-        OAuth2Authentication authentication = getAuthentication();
-        String token = tokenRetriever.getAuthToken(authentication);
         ClientHttpRequestInterceptor interceptor =
-            new HeaderAddingHttpInterceptor("Authorization", "bearer " + token);
+                new HeaderAddingHttpInterceptor("Authorization", "bearer " + getAccessToken());
         restTemplate.setInterceptors(singletonList(interceptor));
 
         return restTemplate;
     }
 
+    private String getAccessToken() {
+        OAuth2Authentication authentication = getAuthentication();
+        return tokenRetriever.getAuthToken(authentication);
+    }
+
     @Bean
     protected UsersService usersService(CcOperations ccClient,
                                         UaaOperations uaaClient,
-                                        PasswordGenerator passwordGenerator,
                                         InvitationsService invitationsService,
                                         AccessInvitationsService accessInvitationsService) {
-        return new CfUsersService(ccClient, uaaClient, passwordGenerator, invitationsService, accessInvitationsService);
+        return new CfUsersService(ccClient, uaaClient, invitationsService, accessInvitationsService);
     }
 
     @Bean
     protected UsersService priviledgedUsersService(CcOperations ccPrivilegedClient,
                                                    UaaOperations uaaPrivilegedClient,
-                                                   PasswordGenerator passwordGenerator,
                                                    InvitationsService invitationsService,
                                                    AccessInvitationsService accessInvitationsService) {
         return new CfUsersService(ccPrivilegedClient,
                 uaaPrivilegedClient,
-                passwordGenerator,
                 invitationsService,
                 accessInvitationsService);
     }
@@ -126,7 +143,7 @@ public class UsersConfig {
 
     @Bean
     protected OrgUserInvitationService orgUserInvitationService(MessageService messageService,
-        TemplateEngine templateEngine) {
+                                                                TemplateEngine templateEngine) {
         return new EmailOrgUserInvitationService(messageService, templateEngine);
     }
 }

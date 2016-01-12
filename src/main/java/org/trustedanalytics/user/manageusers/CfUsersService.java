@@ -15,12 +15,14 @@
  */
 package org.trustedanalytics.user.manageusers;
 
+import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Sets;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
@@ -34,6 +36,8 @@ import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 
 import org.trustedanalytics.user.invite.securitycode.NoSuchUserException;
 import rx.Observable;
+import rx.observables.BlockingObservable;
+import rx.observables.GroupedObservable;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -44,25 +48,24 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiFunction;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class CfUsersService implements UsersService {
 
     private final CcOperations ccClient;
     private final UaaOperations uaaClient;
-    private final PasswordGenerator passwordGenerator;
     private final InvitationsService invitationsService;
     private final AccessInvitationsService accessInvitationsService;
 
     public CfUsersService(CcOperations ccClient,
                           UaaOperations uaaClient,
-                          PasswordGenerator passwordGenerator,
                           InvitationsService invitationsService,
                           AccessInvitationsService accessInvitationsService) {
         super();
         this.ccClient = ccClient;
         this.uaaClient = uaaClient;
-        this.passwordGenerator = passwordGenerator;
         this.invitationsService = invitationsService;
         this.accessInvitationsService = accessInvitationsService;
     }
@@ -257,33 +260,35 @@ public class CfUsersService implements UsersService {
     }
 
     private Collection<User> getUsers(UUID guid, Set<Role> roles,
-        BiFunction<UUID, Role, Collection<User>> getUserFunc) {
+        BiFunction<UUID, Role, Collection<User>> getUsersFunc) {
+
         List<User> users = roles.stream()
-                .flatMap(r -> getUserFunc.apply(guid, r).stream())
-            .collect(toList());
+                .flatMap(r -> getUsersFunc.apply(guid, r).stream())
+                .collect(Collectors.toList());
 
-        Map<UUID, User> usersMap = new HashMap<>();
-        for (User user : users) {
-            User existing = usersMap.putIfAbsent(user.getGuid(), user);
-            if (existing != null) {
-                existing.appendRole(user.getRoles().get(0));
-            }
-        }
+        Collection<UUID> userIdList = users.stream()
+                .map(user -> user.getGuid())
+                .distinct()
+                .collect(Collectors.toSet());
 
-        uaaClient.findUserNames(usersMap.keySet())
-            .forEach(user -> {
-                User u = usersMap.get(user.getGuid());
-                if (u != null) {
-                    u.setUsername(user.getUserName());
-                }
-            });
+        Map<UUID, String> nameMap = uaaClient
+                .findUserNames(userIdList)
+                .stream()
+                .collect(Collectors.toMap(UserIdNamePair::getGuid, UserIdNamePair::getUserName));
 
-        return usersMap.values().stream()
-            .filter(p -> p.getUsername() != null)
-            .map(p -> {
-                p.getRoles().remove(Role.USERS);
-                return p;
+        return users
+            .stream()
+            .collect(Collectors.groupingBy(User::getGuid))
+            .entrySet()
+            .stream()
+            .map(group -> {
+                List<Role> userRoles = group.getValue().stream()
+                        .flatMap(u -> u.getRoles().stream()
+                                .filter(r -> r != Role.USERS))
+                        .collect(Collectors.toList());
+                UUID userGuid = group.getKey();
+                return new User(nameMap.get(userGuid), userGuid, userRoles);
             })
-            .collect(toList());
+            .collect(Collectors.toList());
     }
 }
