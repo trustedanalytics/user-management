@@ -11,5 +11,5 @@ applications:
   - sso
   env:
     SPRING_PROFILES_ACTIVE: "cloud,redis"
-    JBP_CONFIG_OPEN_JDK_JRE: '[memory_sizes: {metaspace: 128m..}]'
+    JBP_CONFIG_OPEN_JDK_JRE: '[memory_sizes: {metaspace: 128m..}, memory_heuristics: {heap: 45, native: 45, stack: 0.05}]'  
     VERSION: ${version}
