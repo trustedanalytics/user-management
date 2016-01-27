@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/trustedanalytics/user-management.svg?branch=master)](https://travis-ci.org/trustedanalytics/user-management)
+
 User management
 ==========
 
