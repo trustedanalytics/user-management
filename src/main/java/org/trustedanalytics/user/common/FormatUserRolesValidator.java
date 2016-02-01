@@ -29,9 +29,19 @@ public class FormatUserRolesValidator implements UserRolesValidator {
         }
     }
 
+    private void validateOrgUserRoles(List<Role> roles) {
+        if(roles == null) {
+            throw new WrongUserRolesException("You cannot perform request without specified roles.");
+        }
+    }
+
     @Override
-    public void validate(List<Role> roles) {
+    public void validateSpaceRoles(List<Role> roles) {
         validateSpaceUserRoles(roles);
     }
 
+    @Override
+    public void validateOrgRoles(List<Role> roles) {
+        validateOrgUserRoles(roles);
+    }
 }

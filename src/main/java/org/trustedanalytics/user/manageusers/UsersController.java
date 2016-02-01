@@ -111,7 +111,7 @@ public class UsersController {
         UUID spaceUuid = stringToUuidConverter.convert(space);
         String currentUser = detailsFinder.findUserName(auth);
         emailValidator.validate(userRequest.getUsername());
-        formatRolesValidator.validate(userRequest.getRoles());
+        formatRolesValidator.validateSpaceRoles(userRequest.getRoles());
         return determinePriviledgeLevel(auth, AuthorizationScope.SPACE, spaceUuid)
             .addSpaceUser(userRequest, spaceUuid, currentUser).orElse(null);
     }
@@ -120,7 +120,7 @@ public class UsersController {
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public List<Role> updateOrgUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String org,
                                          @PathVariable String user, Authentication auth) {
-        formatRolesValidator.validate(userRolesRequest.getRoles());
+        formatRolesValidator.validateOrgRoles(userRolesRequest.getRoles());
         UUID userGuid = stringToUuidConverter.convert(user);
         UUID orgGuid = stringToUuidConverter.convert(org);
         return determinePriviledgeLevel(auth, AuthorizationScope.ORG, orgGuid)
@@ -131,7 +131,7 @@ public class UsersController {
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public List<Role> updateSpaceUserRoles(@RequestBody UserRolesRequest userRolesRequest, @PathVariable String space,
                                            @PathVariable String user, Authentication auth) {
-        formatRolesValidator.validate(userRolesRequest.getRoles());
+        formatRolesValidator.validateSpaceRoles(userRolesRequest.getRoles());
         UUID userGuid = stringToUuidConverter.convert(user);
         UUID spaceGuid = stringToUuidConverter.convert(space);
         return  determinePriviledgeLevel(auth, AuthorizationScope.SPACE, spaceGuid)

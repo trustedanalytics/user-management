@@ -18,7 +18,7 @@ package org.trustedanalytics.user.common;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import java.util.List;
 
-@FunctionalInterface
 public interface UserRolesValidator {
-    void validate(List<Role> roles);
+    void validateSpaceRoles(List<Role> roles);
+    void validateOrgRoles(List<Role> roles);
 }
