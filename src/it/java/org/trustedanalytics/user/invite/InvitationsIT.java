@@ -16,13 +16,13 @@
 package org.trustedanalytics.user.invite;
 
 import static org.mockito.Matchers.*;
-import static org.trustedanalytics.user.orgs.RestOperationsHelpers.postForEntityWithToken;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.core.StringContains.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.trustedanalytics.user.orgs.RestOperationsHelpers.postForEntityWithToken;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;

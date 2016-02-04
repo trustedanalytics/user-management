@@ -47,10 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.BiFunction;
-import java.util.stream.Collector;
+import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class CfUsersService implements UsersService {
 
@@ -72,12 +70,18 @@ public class CfUsersService implements UsersService {
 
     @Override
     public Collection<User> getOrgUsers(UUID orgGuid) {
-        return getUsers(orgGuid, Role.ORG_ROLES, ccClient::getOrgUsers);
+        return getUsersWithRoles(orgGuid, ccClient::getOrgUsersWithRoles);
     }
 
     @Override
-    public Collection<User> getSpaceUsers(UUID spaceGuid) {
-        return getUsers(spaceGuid, Role.SPACE_ROLES, ccClient::getSpaceUsers);
+    public Collection<User> getSpaceUsers(UUID spaceGuid, Optional<String> username) {
+        Collection<User> users = getUsersWithRoles(spaceGuid, ccClient::getSpaceUsersWithRoles);
+        if (username.isPresent()) {
+            return users.stream()
+                    .filter(user -> user.getUsername().equals(username.get()))
+                    .collect(toList());
+        }
+        return users;
     }
 
     @Override
@@ -85,10 +89,10 @@ public class CfUsersService implements UsersService {
         Optional<UserIdNamePair> idNamePair = uaaClient.findUserIdByName(userRequest.getUsername());
         if(!idNamePair.isPresent()) {
             inviteUserToOrg(userRequest.getUsername(), currentUser, orgGuid,
-                ImmutableSet.<Role>builder()
-                    .addAll(userRequest.getRoles())
-                    .add(Role.USERS)
-                    .build());
+                    ImmutableSet.<Role>builder()
+                            .addAll(userRequest.getRoles())
+                            .add(Role.USERS)
+                            .build());
         }
 
         return idNamePair.map(pair -> {
@@ -143,7 +147,7 @@ public class CfUsersService implements UsersService {
     }
 
     private boolean isUserAssignedToSpace(UUID userGuid, UUID spaceGuid) {
-        return this.getSpaceUsers(spaceGuid)
+        return this.getSpaceUsers(spaceGuid, Optional.empty())
                 .stream()
                 .anyMatch(member -> member.getGuid().equals(userGuid));
     }
@@ -219,7 +223,7 @@ public class CfUsersService implements UsersService {
 
     @Override
     public void deleteUserFromSpace(UUID userGuid, UUID spaceGuid) {
-        if (getSpaceUsers(spaceGuid).stream().noneMatch(x -> userGuid.equals(x.getGuid()))) {
+        if (getSpaceUsers(spaceGuid, Optional.empty()).stream().noneMatch(x -> userGuid.equals(x.getGuid()))) {
             throw new EntityNotFoundException("The user is not in given space", null);
         }
 
@@ -259,36 +263,26 @@ public class CfUsersService implements UsersService {
                 .singleOrDefault(Optional.empty());
     }
 
-    private Collection<User> getUsers(UUID guid, Set<Role> roles,
-        BiFunction<UUID, Role, Collection<User>> getUsersFunc) {
-
-        List<User> users = roles.stream()
-                .flatMap(r -> getUsersFunc.apply(guid, r).stream())
-                .collect(Collectors.toList());
-
+    private Collection<User> getUsersWithRoles(UUID guid, Function<UUID, Observable<User>> getUserFunc) {
+        List<User> users = getUserFunc.apply(guid).toList().toBlocking().single();
         Collection<UUID> userIdList = users.stream()
                 .map(user -> user.getGuid())
-                .distinct()
                 .collect(Collectors.toSet());
 
         Map<UUID, String> nameMap = uaaClient
                 .findUserNames(userIdList)
                 .stream()
+                .filter(x -> x.getUserName() != null)
                 .collect(Collectors.toMap(UserIdNamePair::getGuid, UserIdNamePair::getUserName));
 
-        return users
-            .stream()
-            .collect(Collectors.groupingBy(User::getGuid))
-            .entrySet()
-            .stream()
-            .map(group -> {
-                List<Role> userRoles = group.getValue().stream()
-                        .flatMap(u -> u.getRoles().stream()
-                                .filter(r -> r != Role.USERS))
-                        .collect(Collectors.toList());
-                UUID userGuid = group.getKey();
-                return new User(nameMap.get(userGuid), userGuid, userRoles);
-            })
-            .collect(Collectors.toList());
-    }
+
+        return users.stream()
+                .filter(x -> nameMap.containsKey(x.getGuid()))
+                .map(x-> {
+                    List<Role> roles = x.getRoles().stream().filter(y -> y != Role.USERS).collect(Collectors.toList());
+                    String usernameFromUaa = nameMap.get(x.getGuid());
+                    return new User(usernameFromUaa, x.getGuid(), roles,  x.getOrgGuid());
+                })
+                .collect(Collectors.toList());
+        }
 }

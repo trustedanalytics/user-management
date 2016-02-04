@@ -33,9 +33,11 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -86,10 +88,11 @@ public class UsersController {
     }
 
     @RequestMapping(value = SPACE_USERS_URL, method = GET, produces = APPLICATION_JSON_VALUE)
-    public Collection<User> getSpaceUsers(@PathVariable String space, Authentication auth) {
+    public Collection<User> getSpaceUsers(@PathVariable String space, Authentication auth,
+                                          @RequestParam(value = "username") Optional<String> username) {
         UUID spaceUuid = stringToUuidConverter.convert(space);
         return determinePriviledgeLevel(auth, AuthorizationScope.SPACE, spaceUuid)
-            .getSpaceUsers(spaceUuid);
+            .getSpaceUsers(spaceUuid, username);
     }
 
     @RequestMapping(value = ORG_USERS_URL, method = POST,

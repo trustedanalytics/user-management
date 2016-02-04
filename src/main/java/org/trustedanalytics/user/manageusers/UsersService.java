@@ -27,7 +27,7 @@ import java.util.UUID;
 public interface UsersService {
     Collection<User> getOrgUsers(UUID orgGuid);
 
-    Collection<User> getSpaceUsers(UUID spaceGuid);
+    Collection<User> getSpaceUsers(UUID spaceGuid, Optional<String> username);
 
     Optional<User> addOrgUser(UserRequest userRequest, UUID org, String currentUser);
     
