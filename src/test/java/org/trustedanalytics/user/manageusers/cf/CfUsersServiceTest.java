@@ -33,6 +33,9 @@ import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
+import org.trustedanalytics.cloud.cc.api.queries.Filter;
+import org.trustedanalytics.cloud.cc.api.queries.FilterOperator;
+import org.trustedanalytics.cloud.cc.api.queries.FilterQuery;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.cloud.uaa.UserIdNamePair;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
@@ -306,9 +309,10 @@ public class CfUsersServiceTest {
         spaces.add(new CcSpace(UUID.randomUUID(), "test2", orgGuid));
         spaces.add(new CcSpace(UUID.randomUUID(), "test3", orgGuid));
 
-        when(ccClient.getUsersSpaces(userGuid, Role.MANAGERS, orgGuid)).thenReturn(managedSpaces);
-        when(ccClient.getUsersSpaces(userGuid, Role.AUDITORS, orgGuid)).thenReturn(auditedSpaces);
-        when(ccClient.getUsersSpaces(userGuid, Role.DEVELOPERS, orgGuid)).thenReturn(spaces);
+        when(ccClient.getUsersSpaces(eq(userGuid), eq(Role.MANAGERS), anyObject())).thenReturn(managedSpaces);
+        when(ccClient.getUsersSpaces(eq(userGuid), eq(Role.AUDITORS), anyObject())).thenReturn(auditedSpaces);
+        when(ccClient.getUsersSpaces(eq(userGuid), eq(Role.DEVELOPERS), anyObject())).thenReturn(spaces);
+
         when(ccClient.getUserOrgs(userGuid)).thenReturn(Collections.singletonList(new CcOrg(orgGuid, "testorg")));
 
         when(ccClient.getOrgUsersWithRoles(orgGuid)).thenReturn(users);
@@ -334,10 +338,9 @@ public class CfUsersServiceTest {
         UUID orgGuid = UUID.randomUUID();
         UUID userGuid = UUID.randomUUID();
 
-        when(ccClient.getUsersSpaces(userGuid, Role.MANAGERS, orgGuid)).thenReturn(Collections.emptyList());
-        when(ccClient.getUsersSpaces(userGuid, Role.AUDITORS, orgGuid)).thenReturn(Collections.emptyList());
-        when(ccClient.getUsersSpaces(userGuid, Role.DEVELOPERS, orgGuid)).thenReturn(Collections.emptyList());
-
+        when(ccClient.getUsersSpaces(eq(userGuid), eq(Role.MANAGERS), anyObject())).thenReturn(Collections.emptyList());
+        when(ccClient.getUsersSpaces(eq(userGuid), eq(Role.AUDITORS), anyObject())).thenReturn(Collections.emptyList());
+        when(ccClient.getUsersSpaces(eq(userGuid), eq(Role.DEVELOPERS), anyObject())).thenReturn(Collections.emptyList());
         when(ccClient.getOrgUsersWithRoles(orgGuid)).thenReturn(Observable.<User>empty());
 
         CfUsersService cfUsersService =

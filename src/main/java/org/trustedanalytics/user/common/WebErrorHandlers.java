@@ -17,6 +17,8 @@ package org.trustedanalytics.user.common;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
+import feign.FeignException;
+import org.trustedanalytics.cloud.cc.api.customizations.FeignResponseException;
 import org.trustedanalytics.utils.errorhandling.ErrorFormatter;
 import org.trustedanalytics.utils.errorhandling.RestErrorHandler;
 
@@ -57,6 +59,13 @@ public class WebErrorHandlers {
         String message = extractErrorFromJSON(e.getResponseBodyAsString());
         message = StringUtils.isNotBlank(message) ? message : e.getMessage();
         logAndSendErrorResponse(response, e.getStatusCode(), message, e);
+    }
+
+    @ExceptionHandler(FeignResponseException.class)
+    public void handleFeignException(
+            FeignResponseException e,
+            HttpServletResponse response) throws IOException {
+        logAndSendErrorResponse(response, e.getStatusCode(), e.getMessage(), e);
     }
 
     @ExceptionHandler(Exception.class)

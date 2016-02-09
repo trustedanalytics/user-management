@@ -27,6 +27,9 @@ import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.cc.api.manageusers.User;
+import org.trustedanalytics.cloud.cc.api.queries.Filter;
+import org.trustedanalytics.cloud.cc.api.queries.FilterOperator;
+import org.trustedanalytics.cloud.cc.api.queries.FilterQuery;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.cloud.uaa.UserIdNamePair;
 import org.trustedanalytics.user.invite.AngularInvitationLinkGenerator;
@@ -213,7 +216,8 @@ public class CfUsersService implements UsersService {
 
         Role.SPACE_ROLES
             .stream()
-            .forEach(role -> ccClient.getUsersSpaces(userGuid, role, orgGuid)
+            .forEach(role -> ccClient.getUsersSpaces(userGuid, role,
+                            FilterQuery.from(Filter.ORGANIZATION_GUID, FilterOperator.EQ, orgGuid))
                 .stream()
                 .forEach(space -> ccClient.revokeSpaceRole(userGuid, space.getGuid(), role))
             );
