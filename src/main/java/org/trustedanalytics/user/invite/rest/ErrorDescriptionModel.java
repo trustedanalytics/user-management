@@ -16,7 +16,6 @@
 package org.trustedanalytics.user.invite.rest;
 
 import lombok.Getter;
-import lombok.Setter;
 
 public class ErrorDescriptionModel {
     enum State {

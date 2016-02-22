@@ -15,19 +15,13 @@
  */
 package org.trustedanalytics.user.invite.rest;
 
-
-import org.trustedanalytics.user.manageusers.UsersService;
-import org.trustedanalytics.user.common.InvitationPendingException;
 import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.current.UserDetailsFinder;
-import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
-import org.trustedanalytics.user.invite.AngularInvitationLinkGenerator;
 import org.trustedanalytics.user.invite.InvitationNotSentException;
 import org.trustedanalytics.user.invite.InvitationsService;
 
 import org.trustedanalytics.user.common.BlacklistEmailValidator;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,7 +34,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 
-import java.util.Optional;
 import java.util.Set;
 
 @RestController

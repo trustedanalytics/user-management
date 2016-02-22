@@ -20,9 +20,7 @@ import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLAS
 import static org.springframework.web.context.WebApplicationContext.SCOPE_REQUEST;
 
 import org.springframework.context.annotation.Profile;
-import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.security.oauth2.client.resource.OAuth2ProtectedResourceDetails;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.cloud.auth.HeaderAddingHttpInterceptor;
 import org.trustedanalytics.cloud.cc.FeignClient;

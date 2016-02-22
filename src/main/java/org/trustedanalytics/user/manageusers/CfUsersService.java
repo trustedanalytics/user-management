@@ -22,7 +22,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ObjectArrays;
 import com.google.common.collect.Sets;
 
-import org.apache.commons.lang3.tuple.Pair;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
@@ -32,20 +31,16 @@ import org.trustedanalytics.cloud.cc.api.queries.FilterOperator;
 import org.trustedanalytics.cloud.cc.api.queries.FilterQuery;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.cloud.uaa.UserIdNamePair;
-import org.trustedanalytics.user.invite.AngularInvitationLinkGenerator;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 
 import org.trustedanalytics.user.invite.securitycode.NoSuchUserException;
 import rx.Observable;
-import rx.observables.BlockingObservable;
-import rx.observables.GroupedObservable;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

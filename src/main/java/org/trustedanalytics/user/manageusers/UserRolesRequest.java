@@ -24,10 +24,6 @@ import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import java.util.List;
 
 public class UserRolesRequest {
-
-    public UserRolesRequest() {
-    }
-
     @JsonProperty("roles")
     @Getter @Setter
     private List<Role> roles;

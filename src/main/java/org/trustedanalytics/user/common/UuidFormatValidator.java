@@ -22,7 +22,6 @@ import org.apache.commons.logging.LogFactory;
 import java.util.UUID;
 
 public class UuidFormatValidator implements UuidValidator {
-    private static final Log LOGGER = LogFactory.getLog(UuidFormatValidator.class);
     @Override
     public void validate(String uuidString) {
         try {

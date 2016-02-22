@@ -16,8 +16,6 @@
 
 package org.trustedanalytics.user.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 
 import java.util.List;

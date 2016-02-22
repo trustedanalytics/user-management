@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class InMemoryStore<T> implements KeyValueStore<T> {
-    final private Map<String, T> valuesMap = new HashMap<String, T>();
+    private final Map<String, T> valuesMap = new HashMap<String, T>();
 
     @Override
     public boolean hasKey(String key) {
