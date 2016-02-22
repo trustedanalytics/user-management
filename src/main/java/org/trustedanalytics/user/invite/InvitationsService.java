@@ -15,13 +15,10 @@
  */
 package org.trustedanalytics.user.invite;
 
-import org.trustedanalytics.user.invite.securitycode.SecurityCode;
-import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
-
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
+
 
 public interface InvitationsService {
     String sendInviteEmail(String email, String currentUser);

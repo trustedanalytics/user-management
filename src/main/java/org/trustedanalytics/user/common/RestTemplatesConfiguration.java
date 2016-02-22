@@ -85,7 +85,9 @@ public class RestTemplatesConfiguration {
     }
 
     @Bean
-    protected UserPasswordValidator userPasswordValidator() { return new UserPasswordValidator(); }
+    protected UserPasswordValidator userPasswordValidator() {
+        return new UserPasswordValidator();
+    }
 
     @Bean
     protected BlacklistEmailValidator emailValidator(){

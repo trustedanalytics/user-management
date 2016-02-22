@@ -15,7 +15,6 @@
  */
 package org.trustedanalytics.user.invite.config;
 
-import java.net.URI;
 import java.util.Arrays;
 import java.util.Objects;
 

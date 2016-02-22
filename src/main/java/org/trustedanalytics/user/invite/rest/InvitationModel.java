@@ -27,7 +27,8 @@ public class InvitationModel {
     @Getter @Setter(value= AccessLevel.PRIVATE)
     private boolean eligibleToCreateOrg;
 
-    private InvitationModel() {}
+    private InvitationModel() {
+    }
 
     public static InvitationModel of(String email, boolean eligibleToCreateOrg) {
         InvitationModel im = new InvitationModel();

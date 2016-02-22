@@ -66,9 +66,6 @@ public class SpacesIT {
     @Autowired
     private String TOKEN;
 
-    //@Autowired
-    //private RestOperations userRestTemplate;
-
     @Autowired
     private CcOperations ccClient;
 

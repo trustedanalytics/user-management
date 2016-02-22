@@ -112,7 +112,7 @@ public class InvitationsController {
 
     @RequestMapping(value = DELETE_INVITATION_URL, method = RequestMethod.DELETE)
     @PreAuthorize(IS_ADMIN_CONDITION)
-    public void deleteInvitation(@PathVariable("email") String email, Authentication authentication) {
+    public void deleteInvitation(@PathVariable("email") String email) {
         invitationsService.deleteInvitation(email);
     }
 

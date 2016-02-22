@@ -17,7 +17,6 @@ package org.trustedanalytics.user.common;
 
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
-import feign.FeignException;
 import org.trustedanalytics.cloud.cc.api.customizations.FeignResponseException;
 import org.trustedanalytics.utils.errorhandling.ErrorFormatter;
 import org.trustedanalytics.utils.errorhandling.RestErrorHandler;

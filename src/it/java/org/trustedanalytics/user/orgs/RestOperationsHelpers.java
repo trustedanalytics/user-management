@@ -51,12 +51,6 @@ public class RestOperationsHelpers {
         return restTemplate.postForEntity(url, request, type, pathVars);
     }
 
-    public static void deleteWithToken(RestOperations restTemplate, String token,
-        String url, Map<String, ?> pathVars) {
-        addAuthHeaderToTemplate(restTemplate, token);
-        restTemplate.delete(url, pathVars);
-    }
-
     private static void addAuthHeaderToTemplate(RestOperations restTemplate, String token) {
         ClientHttpRequestInterceptor interceptor =
             new HeaderAddingHttpInterceptor("Authorization", "bearer " + token);

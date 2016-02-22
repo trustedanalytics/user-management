@@ -86,9 +86,6 @@ public class OrgsIT {
     @Autowired
     private String TOKEN;
 
-    //@Autowired
-    //;private RestOperations userRestTemplate;
-
     @Autowired
     private CcOperations ccClient;
 
@@ -111,14 +108,6 @@ public class OrgsIT {
 
         when(detailsFinder.findUserId(Mockito.any())).thenReturn(UUID.randomUUID());
 
-
-        /*Observable<CcOrg> orgs = Observable.from(orgsReturnedByCf.getOrgs());
-        when(ccClient.getOrgs()).thenReturn(orgs);
-
-        when(ccClient.getManagedOrganizations(any())).thenReturn(orgsReturnedByCf.getOrgs());
-        when(ccClient.getAuditedOrganizations(any())).thenReturn(emptyOrgList.getOrgs());
-        when(ccClient.getBillingManagedOrganizations(any())).thenReturn(emptyOrgList.getOrgs());*/
-
         when(ccClient.getUserPermissions(any(), any()))
                 .thenReturn(
                         orgsReturnedByCf.getOrgs().stream().map(org ->
@@ -126,7 +115,6 @@ public class OrgsIT {
                                         /*isManager*/true,
                                         /*isAuditor*/ false,
                                         /*isBillingManager*/false)).collect(Collectors.toList())
-
                 );
 
         TestRestTemplate testRestTemplate = new TestRestTemplate();
@@ -148,11 +136,6 @@ public class OrgsIT {
         ORGS_FROM_CF.setResources(OrgsTestsResources.getOrgsReturnedByCf().getOrgs());
         final String EXPECTED_ORGS_WITH_SPACES =
             OrgsTestsResources.getOrgsWithSpacesExpectedToBeReturnedBySc();
-
-        //when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcSpace>>() {} )))
-        //        .thenReturn(new ResponseEntity<>(SPACES_FROM_CF, HttpStatus.OK));
-        //when(userRestTemplate.exchange(any(String.class), any(HttpMethod.class), any(null), eq(new ParameterizedTypeReference<Page<CcOrg>>() {} )))
-        //        .thenReturn(new ResponseEntity<>(ORGS_FROM_CF, HttpStatus.OK));
 
         Observable<CcOrg> orgs = Observable.from(OrgsTestsResources.getOrgsReturnedByCf().getOrgs());
         when(ccClient.getOrgs())

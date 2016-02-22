@@ -51,30 +51,16 @@ public class TestConfiguration {
     @Value("${smtp.email_name}")
     private String EMAIL_NAME;
 
-    private static final String uaaBaseUrl = "https://uaa.example.com";
-
-    private static final String apiBaseUrl = "https://api.example.com";
-
     @Bean
     protected UsersService usersService() {
         return mock(UsersService.class);
     }
-
-    /*@Bean
-    protected RestOperations userRestTemplate() {
-        return mock(RestTemplate.class);
-    }*/
 
     @Bean
     protected CloudFoundryOperations cloudFoundryClient() {
         return mock(CloudFoundryOperations.class);
     }
 
-    /*@Bean
-    protected RestOperations clientRestTemplate() {
-        //we have to mock RestTempate class, because the bean is downcasted in UsersConfig.setAccessToken()
-        return mock(RestTemplate.class);
-    }*/
 
     @Bean
     protected CcOperations ccClient() {
@@ -86,20 +72,10 @@ public class TestConfiguration {
         return mock(RestTemplate.class);
     }
 
-    /*@Bean
-    protected CcOperations ccPrivilegedClient() {
-        return mock(CcOperations.class);
-    }*/
-
     @Bean
     protected UaaOperations uaaClient() {
         return mock(UaaOperations.class);
     }
-/*
-    @Bean
-    protected UaaOperations uaaPrivilegedClient() {
-        return mock(UaaOperations.class);
-    }*/
 
     @Bean
     protected InvitationsService invitationsService(SpringTemplateEngine mailTemplateEngine) {

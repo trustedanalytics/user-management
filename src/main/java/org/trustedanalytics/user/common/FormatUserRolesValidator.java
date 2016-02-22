@@ -23,10 +23,6 @@ import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import java.util.List;
 
 public class FormatUserRolesValidator implements UserRolesValidator {
-    private static final Log LOGGER = LogFactory.getLog(FormatUserRolesValidator.class);
-
-    public FormatUserRolesValidator() {}
-
     private void validateSpaceUserRoles(List<Role> roles) {
         if(roles == null || roles.isEmpty()) {
             throw new WrongUserRolesException("You must have at least one role.");

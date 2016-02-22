@@ -70,8 +70,8 @@ public class InvitationsConfig {
             mailProps.setProperty(String.format("mail.%s.auth", smtpProperties.getProtocol()), "false");
         }
 
-        if(smtpProperties.getProtocol().equals("smtps")) {
-            mailProps.setProperty(String.format("mail.smtps.ssl.enable", smtpProperties.getProtocol()), "true");
+        if("smtps".equals(smtpProperties.getProtocol())) {
+            mailProps.setProperty("mail.smtps.ssl.enable", "true");
         }
 
         mailProps.setProperty("mail.smtps.connectiontimeout", Integer.toString(smtpProperties.getTimeout()));

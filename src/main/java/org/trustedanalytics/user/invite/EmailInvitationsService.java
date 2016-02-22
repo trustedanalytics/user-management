@@ -27,7 +27,6 @@ import org.trustedanalytics.user.common.NoPendingInvitationFoundException;
 import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
-import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 import org.trustedanalytics.user.invite.securitycode.SecurityCode;
 import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
 
@@ -40,7 +39,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class EmailInvitationsService implements InvitationsService {
@@ -107,21 +105,17 @@ public class EmailInvitationsService implements InvitationsService {
     }
 
     @Override
-    public Optional<UUID> createUser(String username, String password, String orgName)
-            throws OrgExistsException, UserExistsException, InvalidOrganizationNameException {
+    public Optional<UUID> createUser(String username, String password, String orgName) {
         validateOrgName(orgName);
         validateUsername(username);
 
         Optional<UUID> resultGuid = createAndRetrieveUser(username, password);
-        resultGuid.ifPresent(userGuid -> {
-            createOrganizationAndSpace(resultGuid.get(), orgName);
-        });
-
+        resultGuid.ifPresent(userGuid -> createOrganizationAndSpace(userGuid, orgName));
         return resultGuid;
     }
 
     @Override
-    public Optional<UUID> createUser(String username, String password) throws UserExistsException {
+    public Optional<UUID> createUser(String username, String password) {
         validateUsername(username);
         return createAndRetrieveUser(username, password);
     }

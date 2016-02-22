@@ -111,6 +111,9 @@ public class StorageConfig {
     }
 
     private static class CommonConfiguration {
+        private CommonConfiguration() {
+        }
+
         private static <T> RedisOperations<String, T>
             redisTemplate(RedisConnectionFactory redisConnectionFactory, RedisSerializer<T> valueSerializer) {
             RedisTemplate<String, T> template = new RedisTemplate<String, T>();

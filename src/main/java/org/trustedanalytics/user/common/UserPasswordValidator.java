@@ -22,7 +22,8 @@ public class UserPasswordValidator implements PasswordValidator {
 
     private static int DEFAULT_MIN_PASSWORD_LENGTH = 6;
 
-    public UserPasswordValidator() {}
+    public UserPasswordValidator() {
+    }
 
     public UserPasswordValidator(int minPasswordLength) {
         this.DEFAULT_MIN_PASSWORD_LENGTH = minPasswordLength;

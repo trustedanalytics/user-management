@@ -36,7 +36,8 @@ public final class UserConflictResponse {
     @Getter @Setter
     private String message;
 
-    private UserConflictResponse() {}
+    private UserConflictResponse() {
+    }
 
     public static UserConflictResponse of(ConflictedField field, String message) {
         UserConflictResponse response = new UserConflictResponse();

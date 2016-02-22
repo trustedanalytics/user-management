@@ -19,4 +19,8 @@ public class WrongUuidFormatException extends RuntimeException{
     public WrongUuidFormatException(String message) {
         super(message);
     }
+
+    public WrongUuidFormatException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

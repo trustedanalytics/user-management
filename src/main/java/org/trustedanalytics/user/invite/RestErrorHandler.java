@@ -22,7 +22,6 @@ import org.trustedanalytics.user.common.NoPendingInvitationFoundException;
 import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.common.WrongUserRolesException;
 import org.trustedanalytics.user.common.WrongUuidFormatException;
-import org.trustedanalytics.user.invite.rest.EntityAlreadyExistsException;
 import org.trustedanalytics.user.invite.rest.EntityNotFoundException;
 import org.trustedanalytics.user.invite.securitycode.InvalidSecurityCodeException;
 
