@@ -134,7 +134,7 @@ public class EmailInvitationsService implements InvitationsService {
     public void deleteInvitation(String email) {
         Optional<SecurityCode> sc = securityCodeService.findByMail(email);
         if(!sc.isPresent()) {
-            throw new NoPendingInvitationFoundException("No pending invtiation for "+email);
+            throw new NoPendingInvitationFoundException("No pending invitiation for "+email);
         }
 
         securityCodeService.redeem(sc.get());
