@@ -15,6 +15,10 @@
  */
 package org.trustedanalytics.user.invite.rest;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import org.trustedanalytics.cloud.cc.api.manageusers.User;
 import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
@@ -51,6 +55,16 @@ public class RegistrationsController {
         this.userPasswordValidator = userPasswordValidator;
     }
 
+    @ApiOperation(value = "Registers new user using security code received in email message.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = RegistrationModel.class),
+            @ApiResponse(code = 400, message = "Invalid organization name."),
+            @ApiResponse(code = 403, message = "Security code 'code' empty or null"),
+            @ApiResponse(code = 409, message = "Invalid password (empty or too short)."),
+            @ApiResponse(code = 409, message = "Organization already exists."),
+            @ApiResponse(code = 409, message = "User already exists."),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(method = RequestMethod.POST)
     public RegistrationModel addUser(@RequestBody RegistrationModel newUser,
                                      @RequestParam(value = "code", required = false) String code) {
@@ -74,6 +88,12 @@ public class RegistrationsController {
         return newUser;
     }
 
+    @ApiOperation(value = "Gets invitation using security code received in email message.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = InvitationModel.class),
+            @ApiResponse(code = 403, message = "Security code 'code' empty or null"),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = "/{code}", method = RequestMethod.GET)
     public InvitationModel getInvitation(@PathVariable("code") String code) {
         try {

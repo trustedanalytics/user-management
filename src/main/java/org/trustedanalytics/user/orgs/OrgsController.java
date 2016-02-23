@@ -21,9 +21,14 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.trustedanalytics.cloud.cc.api.CcOperationsOrgsSpaces;
 import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
+import org.trustedanalytics.cloud.cc.api.manageusers.User;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.manageusers.OrgNameRequest;
 
@@ -51,9 +56,14 @@ public class OrgsController {
         this.detailsFinder = detailsFinder;
     }
 
+    @ApiOperation(value = "Returns list of organizations.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = Organization.class, responseContainer = "List"),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = GENERAL_ORGS_URL, method = GET,
         produces = APPLICATION_JSON_VALUE)
-    public Collection<Organization> getOrgs(Authentication auth) {
+    public Collection<Organization> getOrgs(@ApiParam(hidden = true) Authentication auth) {
         Collection<CcOrg> orgs = ccClient.getOrgs().toList().toBlocking().single();
         Collection<CcSpace> spaces = ccClient.getSpaces().toList().toBlocking().single();
         Collection<CcOrg> managedOrgs =
@@ -61,17 +71,34 @@ public class OrgsController {
         return FormatTranslator.getOrganizationsWithSpaces(orgs, managedOrgs, spaces);
     }
 
+    @ApiOperation(value = "Renames organization name.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 400, message = "The organization name is already taken"),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = GENERAL_ORGS_URL
         + "/{org}/name", method = PUT, consumes = APPLICATION_JSON_VALUE)
     public void renameOrg(@RequestBody OrgNameRequest request, @PathVariable String org) {
         ccClient.renameOrg(UUID.fromString(org), request.getName());
     }
 
+    @ApiOperation(value = "Deletes organization.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 404, message = "Organization not found."),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = GENERAL_ORGS_URL + "/{org}", method = DELETE)
     public void deleteOrg(@PathVariable String org) {
         ccClient.deleteOrg(UUID.fromString(org));
     }
 
+    @ApiOperation(value = "Creates a new organization.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = UUID.class),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = GENERAL_ORGS_URL, method = POST, consumes = APPLICATION_JSON_VALUE)
     public UUID createOrg(@RequestBody OrgNameRequest request) {
         return ccClient.createOrganization(request.getName());

@@ -18,6 +18,10 @@ package org.trustedanalytics.user.current;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
 import org.trustedanalytics.cloud.uaa.ChangePasswordRequest;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.user.common.UserPasswordValidator;
@@ -45,6 +49,11 @@ public class CurrentUserController {
         this.passwordValidator = passwordValidator;
     }
 
+    @ApiOperation(value = "Returns current user.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = UserModel.class),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(method = RequestMethod.GET)
     public UserModel getUser(Authentication auth) {
         UserModel user = new UserModel();
@@ -54,6 +63,13 @@ public class CurrentUserController {
         return user;
     }
 
+    @ApiOperation(value = "Changes password for current user.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = UserModel.class),
+            @ApiResponse(code = 400, message = "Password cannot be empty"),
+            @ApiResponse(code = 409, message = "Password too short"),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = "/password", method = PUT,
             produces = APPLICATION_JSON_VALUE, consumes = APPLICATION_JSON_VALUE)
     public void changePassword(@RequestBody ChangePasswordRequest request, Authentication auth) {

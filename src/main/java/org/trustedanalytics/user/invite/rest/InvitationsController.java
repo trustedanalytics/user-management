@@ -15,6 +15,13 @@
  */
 package org.trustedanalytics.user.invite.rest;
 
+
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import org.trustedanalytics.user.manageusers.UsersService;
+import org.trustedanalytics.user.common.InvitationPendingException;
 import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
@@ -66,10 +73,17 @@ public class InvitationsController {
         this.emailValidator = emailValidator;
     }
 
+    @ApiOperation(value = "Add a new invitation for email.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = ErrorDescriptionModel.class),
+            @ApiResponse(code = 409, message = "Invalid email format."),
+            @ApiResponse(code = 409, message = "User already exists."),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(method = RequestMethod.POST)
     @PreAuthorize(IS_ADMIN_CONDITION)
     public ErrorDescriptionModel addInvitation(@RequestBody InvitationModel invitation,
-             Authentication authentication) {
+                                               @ApiParam(hidden = true) Authentication authentication) {
 
         emailValidator.validate(invitation.getEmail());
 
@@ -90,19 +104,37 @@ public class InvitationsController {
             });
     }
 
+    @ApiOperation(value = "Get pending invitations.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = String.class, responseContainer = "List"),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(method = RequestMethod.GET)
     @PreAuthorize(IS_ADMIN_CONDITION)
     public Set<String> getPendingInvitations() {
         return invitationsService.getPendingInvitationsEmails();
     }
 
+    @ApiOperation(value = "Resend invitation to the email.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 404, message = "Invitation not found."),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = RESEND_INVITATION_URL,  method = RequestMethod.POST)
     @PreAuthorize(IS_ADMIN_CONDITION)
-    public void resendInvitation(@PathVariable("email") String email, Authentication authentication) {
+    public void resendInvitation(@PathVariable("email") String email,
+                                 @ApiParam(hidden = true) Authentication authentication) {
         String userName = detailsFinder.findUserName(authentication);
         invitationsService.resendInviteEmail(email, userName);
     }
 
+    @ApiOperation(value = "Delete an invitation.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK"),
+            @ApiResponse(code = 404, message = "Invitation not found."),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = DELETE_INVITATION_URL, method = RequestMethod.DELETE)
     @PreAuthorize(IS_ADMIN_CONDITION)
     public void deleteInvitation(@PathVariable("email") String email) {

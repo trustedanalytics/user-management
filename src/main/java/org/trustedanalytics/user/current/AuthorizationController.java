@@ -18,6 +18,9 @@ package org.trustedanalytics.user.current;
 import static java.util.stream.Collectors.toList;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import org.trustedanalytics.cloud.cc.api.CcOperationsOrgsSpaces;
 import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
 
@@ -52,6 +55,11 @@ public class AuthorizationController {
         this.ccClient = ccClient;
     }
 
+    @ApiOperation(value = "Returns permissions for user within specified organizations.")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "OK", response = CcOrgPermission.class, responseContainer = "List"),
+            @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
+    })
     @RequestMapping(value = "/rest/orgs/permissions", method = GET)
     public Collection<CcOrgPermission> getPermissions(@RequestParam(required = false) String orgs,
         Authentication authentication) {

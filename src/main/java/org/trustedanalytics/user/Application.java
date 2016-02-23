@@ -23,6 +23,7 @@ import org.springframework.cloud.security.oauth2.client.OAuth2ClientAutoConfigur
 import org.springframework.cloud.security.oauth2.resource.EnableOAuth2Resource;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 
+
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 @EnableOAuth2Resource
 @SpringBootApplication

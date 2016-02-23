@@ -1,7 +1,7 @@
 server:
   port: 9998
 security:
-  ignored: /rest/registrations/*,/rest/registrations,/new-account*,/sdoc.jsp,/*.js,/api-docs,/api-docs/default/*,/images/*,/lib/*,/css/*
+  ignored: /rest/registrations/*,/rest/registrations,/new-account*,/v2/api-docs,/api-docs/default/*,/images/*,/lib/*
 
 spring.oauth2:
   client:
