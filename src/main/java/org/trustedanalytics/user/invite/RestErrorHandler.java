@@ -15,6 +15,7 @@
  */
 package org.trustedanalytics.user.invite;
 
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.trustedanalytics.user.common.EmptyPasswordException;
 import org.trustedanalytics.user.common.TooShortPasswordException;
@@ -61,66 +62,64 @@ public class RestErrorHandler {
         return UserConflictResponse.of(UserConflictResponse.ConflictedField.ORG, e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InvalidOrganizationNameException.class)
     public void invalidOrgName(InvalidOrganizationNameException e, HttpServletResponse response)
             throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(WrongUuidFormatException.class)
     public void invalidUuidString(WrongUuidFormatException e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
     public void entityNotFound(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(WrongUserRolesException.class)
     public void incorrectRoles(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(WrongEmailAddressException.class)
     public void wrongEmailAddress(Exception e, HttpServletResponse response) throws IOException {
         //It is a way to specify HTTP status as a response to particular exception
         response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(EmptyPasswordException.class)
     public void emptyPassword(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(TooShortPasswordException.class)
     public void tooShortPassword(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoPendingInvitationFoundException.class)
     public void noPendingInvitation(NoPendingInvitationFoundException e, HttpServletResponse response)
             throws IOException {
         response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoSuchUserException.class)
     public void userNotExists(NoSuchUserException e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(AccessDeniedException.class)
     public void accessDenied(Exception e, HttpServletResponse response) throws IOException {
         response.sendError(HttpStatus.FORBIDDEN.value(), e.getMessage());
     }
+
+    @ResponseBody
+    @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public String userExists(HttpRequestMethodNotSupportedException e) throws IOException {
+        return e.getMessage();
+    }
+
 }
