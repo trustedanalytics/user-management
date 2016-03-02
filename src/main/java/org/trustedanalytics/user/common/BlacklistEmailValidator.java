@@ -17,6 +17,7 @@
 package org.trustedanalytics.user.common;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
@@ -28,6 +29,11 @@ import org.trustedanalytics.user.invite.WrongEmailAddressException;
 
 public class BlacklistEmailValidator implements EmailValidator {
     private static final Log LOGGER = LogFactory.getLog(BlacklistEmailValidator.class);
+    private static final String emailPattern = "^[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@" +
+            "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$";
+
+    private static final int MAX_NUMBER_OF_CHARACTERS_IN_DOMAIN_PART = 252;
+    private static final int MAX_NUMBER_OF_CHARACTERS_IN_LOCAL_PART = 64;
 
     private final List<String> forbiddenDomains;
 
@@ -36,19 +42,21 @@ public class BlacklistEmailValidator implements EmailValidator {
     }
 
     private void validateDomain(String email) {
-        String domain = email.substring(email.indexOf("@") + 1);
-        domain = domain.toLowerCase();
-        if(forbiddenDomains.contains(domain)){
+        if(forbiddenDomains.contains(getDomainPart(email))){
             throw new WrongEmailAddressException("That domain is blocked");
+        }
+        if(getDomainPart(email).length() > MAX_NUMBER_OF_CHARACTERS_IN_DOMAIN_PART) {
+            throw new WrongEmailAddressException("Domain part of email address is too long");
         }
     }
 
     private void validateEmailAddress(String email) {
-        try{
-            new InternetAddress(email).validate();
-        } catch (AddressException e){
-            LOGGER.warn(e);
+        Pattern pattern = Pattern.compile(emailPattern);
+        if(!pattern.matcher(email).matches()) {
             throw new WrongEmailAddressException("That email address is not valid");
+        }
+        if(getLocalPart(email).length() > MAX_NUMBER_OF_CHARACTERS_IN_LOCAL_PART) {
+            throw new WrongEmailAddressException("Local part of email address is too long");
         }
 
         if(!CharMatcher.ascii().matchesAllOf(email)) {
@@ -67,4 +75,11 @@ public class BlacklistEmailValidator implements EmailValidator {
         validateDomain(email);
     }
 
+    private String getDomainPart(String email) {
+        return email.substring(email.indexOf("@") + 1).toLowerCase();
+    }
+
+    private String getLocalPart(String email) {
+        return email.substring(0, email.indexOf("@")).toLowerCase();
+    }
 }
