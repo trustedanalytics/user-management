@@ -21,6 +21,7 @@ import java.util.List;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
+import com.google.common.base.CharMatcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.trustedanalytics.user.invite.WrongEmailAddressException;
@@ -49,6 +50,11 @@ public class BlacklistEmailValidator implements EmailValidator {
             LOGGER.warn(e);
             throw new WrongEmailAddressException("That email address is not valid");
         }
+
+        if(!CharMatcher.ascii().matchesAllOf(email)) {
+            throw new WrongEmailAddressException("Email must not containt NON-ASCII characters");
+        }
+
     }
 
     /* That method at first checks whether string passed into parameter

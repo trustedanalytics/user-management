@@ -86,11 +86,11 @@ public class RestErrorHandler {
         response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(WrongEmailAddressException.class)
     public void wrongEmailAddress(Exception e, HttpServletResponse response) throws IOException {
         //It is a way to specify HTTP status as a response to particular exception
-        response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
+        response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

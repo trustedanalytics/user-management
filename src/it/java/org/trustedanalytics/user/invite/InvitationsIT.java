@@ -99,9 +99,6 @@ public class InvitationsIT {
     @Autowired
     private SecurityCodeService codeService;
 
-    //@Autowired
-    //private RestOperations clientRestTemplate;
-
     @Autowired
     private CcOperations ccClient;
 
