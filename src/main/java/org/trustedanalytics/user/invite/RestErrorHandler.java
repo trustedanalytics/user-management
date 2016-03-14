@@ -62,57 +62,76 @@ public class RestErrorHandler {
         return UserConflictResponse.of(UserConflictResponse.ConflictedField.ORG, e.getMessage());
     }
 
+
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(InvalidOrganizationNameException.class)
-    public void invalidOrgName(InvalidOrganizationNameException e, HttpServletResponse response)
-            throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+    public String invalidOrgName(InvalidOrganizationNameException e) throws IOException {
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(WrongUuidFormatException.class)
-    public void invalidUuidString(WrongUuidFormatException e, HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+    public String invalidUuidString(WrongUuidFormatException e) throws IOException {
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(EntityNotFoundException.class)
-    public void entityNotFound(Exception e, HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
+    public String entityNotFound(Exception e) throws IOException {
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(WrongUserRolesException.class)
-    public void incorrectRoles(Exception e, HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
+    public String incorrectRoles(Exception e) throws IOException {
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(WrongEmailAddressException.class)
-    public void wrongEmailAddress(Exception e, HttpServletResponse response) throws IOException {
-        //It is a way to specify HTTP status as a response to particular exception
-        response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+    public String wrongEmailAddress(Exception e) throws IOException {
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(EmptyPasswordException.class)
-    public void emptyPassword(Exception e, HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.BAD_REQUEST.value(), e.getMessage());
+    public String emptyPassword(Exception e) throws IOException {
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.CONFLICT)
     @ExceptionHandler(TooShortPasswordException.class)
-    public void tooShortPassword(Exception e, HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.CONFLICT.value(), e.getMessage());
+    public String tooShortPassword(Exception e) throws IOException {
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoPendingInvitationFoundException.class)
-    public void noPendingInvitation(NoPendingInvitationFoundException e, HttpServletResponse response)
+    public String noPendingInvitation(NoPendingInvitationFoundException e)
             throws IOException {
-        response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NoSuchUserException.class)
-    public void userNotExists(NoSuchUserException e, HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.NOT_FOUND.value(), e.getMessage());
+    public String userNotExists(NoSuchUserException e) throws IOException {
+        return e.getMessage();
     }
 
+    @ResponseBody
+    @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(AccessDeniedException.class)
-    public void accessDenied(Exception e, HttpServletResponse response) throws IOException {
-        response.sendError(HttpStatus.FORBIDDEN.value(), e.getMessage());
+    public String accessDenied(Exception e) throws IOException {
+        return e.getMessage();
     }
 
     @ResponseBody
