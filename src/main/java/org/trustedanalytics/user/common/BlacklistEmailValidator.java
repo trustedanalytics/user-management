@@ -58,11 +58,6 @@ public class BlacklistEmailValidator implements EmailValidator {
         if(getLocalPart(email).length() > MAX_NUMBER_OF_CHARACTERS_IN_LOCAL_PART) {
             throw new WrongEmailAddressException("Local part of email address is too long");
         }
-
-        if(!CharMatcher.ascii().matchesAllOf(email)) {
-            throw new WrongEmailAddressException("Email must not containt NON-ASCII characters");
-        }
-
     }
 
     /* That method at first checks whether string passed into parameter
