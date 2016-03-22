@@ -19,17 +19,12 @@ package org.trustedanalytics.user.common;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-
-import com.google.common.base.CharMatcher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.trustedanalytics.user.invite.WrongEmailAddressException;
 
 public class BlacklistEmailValidator implements EmailValidator {
-    private static final Log LOGGER = LogFactory.getLog(BlacklistEmailValidator.class);
-    private static final String emailPattern = "^[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@" +
+    private static final String EMAIL_PATTERN = "^[a-z0-9!#$%&'*+=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+=?^_`{|}~-]+)*@" +
             "(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$";
 
     private static final int MAX_NUMBER_OF_CHARACTERS_IN_DOMAIN_PART = 252;
@@ -51,7 +46,7 @@ public class BlacklistEmailValidator implements EmailValidator {
     }
 
     private void validateEmailAddress(String email) {
-        Pattern pattern = Pattern.compile(emailPattern);
+        Pattern pattern = Pattern.compile(EMAIL_PATTERN);
         if(!pattern.matcher(email).matches()) {
             throw new WrongEmailAddressException("That email address is not valid");
         }

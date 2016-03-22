@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.trustedanalytics.user.invite.securitycode.NoSuchUserException;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.springframework.security.access.AccessDeniedException;
 

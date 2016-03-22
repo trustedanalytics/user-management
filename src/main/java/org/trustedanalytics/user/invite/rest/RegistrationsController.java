@@ -18,7 +18,6 @@ package org.trustedanalytics.user.invite.rest;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.trustedanalytics.cloud.cc.api.manageusers.User;
 import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;

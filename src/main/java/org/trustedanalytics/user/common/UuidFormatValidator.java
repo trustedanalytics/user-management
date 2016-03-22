@@ -16,9 +16,6 @@
 
 package org.trustedanalytics.user.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.util.UUID;
 
 public class UuidFormatValidator implements UuidValidator {

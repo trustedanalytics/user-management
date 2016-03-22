@@ -21,7 +21,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.trustedanalytics.cloud.cc.api.CcOrgPermission;
 import org.trustedanalytics.cloud.uaa.ChangePasswordRequest;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.user.common.UserPasswordValidator;

@@ -28,7 +28,6 @@ import io.swagger.annotations.ApiResponses;
 import org.trustedanalytics.cloud.cc.api.CcOperationsOrgsSpaces;
 import org.trustedanalytics.cloud.cc.api.CcOrg;
 import org.trustedanalytics.cloud.cc.api.CcSpace;
-import org.trustedanalytics.cloud.cc.api.manageusers.User;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.manageusers.OrgNameRequest;
 

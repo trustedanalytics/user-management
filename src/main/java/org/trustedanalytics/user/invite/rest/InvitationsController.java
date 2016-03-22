@@ -20,8 +20,6 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import org.trustedanalytics.user.manageusers.UsersService;
-import org.trustedanalytics.user.common.InvitationPendingException;
 import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.current.UserDetailsFinder;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
