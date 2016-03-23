@@ -13,21 +13,20 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite;
+package org.trustedanalytics.user.common;
 
-import org.trustedanalytics.user.common.OrgAndUserGuids;
-
-import java.util.Optional;
-import java.util.Set;
+import lombok.Getter;
 import java.util.UUID;
 
 
-public interface InvitationsService {
-    String sendInviteEmail(String email, String currentUser);
-    String resendInviteEmail(String email, String currentUser);
-    Optional<OrgAndUserGuids> createUser(String username, String password, String orgName);
-    Optional<UUID> createUser(String username, String password);
-    boolean userExists(String username);
-    Set<String> getPendingInvitationsEmails();
-    void deleteInvitation(String email);
+public final class OrgAndUserGuids {
+    @Getter
+    private final UUID userGuid;
+    @Getter
+    private final UUID orgGuid;
+
+    public OrgAndUserGuids(UUID userGuid, UUID orgGuid) {
+        this.userGuid = userGuid;
+        this.orgGuid = orgGuid;
+    }
 }

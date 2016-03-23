@@ -27,4 +27,10 @@ public class RegistrationModel {
 
     @Getter @Setter
     private String org;
+
+    @Getter @Setter
+    private String orgGuid;
+
+    @Getter @Setter
+    private String userGuid;
 }

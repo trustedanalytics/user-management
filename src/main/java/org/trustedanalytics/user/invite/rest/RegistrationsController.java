@@ -18,6 +18,7 @@ package org.trustedanalytics.user.invite.rest;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import org.trustedanalytics.user.common.OrgAndUserGuids;
 import org.trustedanalytics.user.common.UserPasswordValidator;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
@@ -33,6 +34,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/rest/registrations")
@@ -70,20 +73,22 @@ public class RegistrationsController {
         if (Strings.isNullOrEmpty(code)) {
             throw new InvalidSecurityCodeException("Security code empty or null");
         }
-
         SecurityCode sc = securityCodeService.verify(code);
-
         userPasswordValidator.validate(newUser.getPassword());
-
+        Optional<OrgAndUserGuids> orgAndUserGuids = Optional.empty();
         String email = sc.getEmail();
         if (accessInvitationsService.getOrgCreationEligibility(email)) {
-            invitationsService.createUser(email, newUser.getPassword(), newUser.getOrg());
+            orgAndUserGuids = invitationsService.createUser(email, newUser.getPassword(), newUser.getOrg());
         }
         else {
             invitationsService.createUser(email, newUser.getPassword());
         }
         securityCodeService.redeem(sc);
         accessInvitationsService.redeemAccessInvitations(email);
+        orgAndUserGuids.ifPresent(guids -> {
+            newUser.setOrgGuid(guids.getOrgGuid().toString());
+            newUser.setUserGuid(guids.getUserGuid().toString());
+        });
         return newUser;
     }
 

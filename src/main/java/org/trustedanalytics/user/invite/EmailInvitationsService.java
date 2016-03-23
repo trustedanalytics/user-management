@@ -24,6 +24,7 @@ import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.user.common.NoPendingInvitationFoundException;
+import org.trustedanalytics.user.common.OrgAndUserGuids;
 import org.trustedanalytics.user.common.UserExistsException;
 import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
@@ -105,13 +106,16 @@ public class EmailInvitationsService implements InvitationsService {
     }
 
     @Override
-    public Optional<UUID> createUser(String username, String password, String orgName) {
+    public Optional<OrgAndUserGuids> createUser(String username, String password, String orgName) {
         validateOrgName(orgName);
         validateUsername(username);
-
         Optional<UUID> resultGuid = createAndRetrieveUser(username, password);
-        resultGuid.ifPresent(userGuid -> createOrganizationAndSpace(userGuid, orgName));
-        return resultGuid;
+        Optional<OrgAndUserGuids> orgAndUserGuids= resultGuid.map(userGuid -> {
+            UUID orgGuid = createOrganization(userGuid, orgName);
+            createSpace(orgGuid, userGuid, "default");
+            return new OrgAndUserGuids(userGuid , orgGuid);
+        });
+        return orgAndUserGuids;
     }
 
     @Override
@@ -174,12 +178,16 @@ public class EmailInvitationsService implements InvitationsService {
             .single();
     }
 
-    private void createOrganizationAndSpace(UUID userGuid, String orgName) {
-        final String defaultSpaceName = "default";
+    private UUID createOrganization(UUID userGuid, String orgName) {
         final UUID orgGuid = ccPrivilegedClient.createOrganization(orgName);
         ccPrivilegedClient.assignUserToOrganization(userGuid, orgGuid);
-        final UUID spaceGuid = ccPrivilegedClient.createSpace(orgGuid, defaultSpaceName);
+        return orgGuid;
+    }
+
+    private UUID createSpace(UUID orgGuid, UUID userGuid, String spaceName) {
+        final UUID spaceGuid = ccPrivilegedClient.createSpace(orgGuid, spaceName);
         ccPrivilegedClient.assignUserToSpace(userGuid, spaceGuid);
+        return spaceGuid;
     }
 
     private void retrieveAndAssignAccessInvitations(UUID userGuid, AccessInvitations invtiations) {
