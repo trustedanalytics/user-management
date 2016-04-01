@@ -32,7 +32,7 @@ import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.cloud.uaa.UserIdNameList;
 import org.trustedanalytics.cloud.uaa.UserIdNamePair;
-import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
+import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUserFactory;
 import org.trustedanalytics.user.Application;
 import org.trustedanalytics.user.TestConfiguration;

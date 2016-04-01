@@ -15,8 +15,11 @@
  */
 package org.trustedanalytics.user.invite;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.trustedanalytics.cloud.cc.api.customizations.CloudFoundryException;
 import org.trustedanalytics.user.common.EmptyPasswordException;
 import org.trustedanalytics.user.common.TooShortPasswordException;
 import org.trustedanalytics.user.common.NoPendingInvitationFoundException;
@@ -36,11 +39,16 @@ import org.trustedanalytics.user.invite.securitycode.NoSuchUserException;
 
 import java.io.IOException;
 import org.springframework.security.access.AccessDeniedException;
+import org.trustedanalytics.utils.errorhandling.ErrorLogger;
+
+import javax.servlet.http.HttpServletResponse;
 
 @ControllerAdvice
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class RestErrorHandler {
     //It is a way to specify HTTP status as a response to particular exception
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestErrorHandler.class);
 
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler(InvalidSecurityCodeException.class)
@@ -138,6 +146,11 @@ public class RestErrorHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public String userExists(HttpRequestMethodNotSupportedException e) throws IOException {
         return e.getMessage();
+    }
+
+    @ExceptionHandler(CloudFoundryException.class)
+    public void handleCloudFoundryException(CloudFoundryException e, HttpServletResponse response) throws IOException {
+        ErrorLogger.logAndSendErrorResponse(LOGGER, response, HttpStatus.valueOf(e.getHttpCode()), e.getMessage(), e);
     }
 
 }

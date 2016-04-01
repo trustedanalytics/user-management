@@ -38,7 +38,7 @@ import org.trustedanalytics.cloud.cc.api.queries.FilterOperator;
 import org.trustedanalytics.cloud.cc.api.queries.FilterQuery;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.cloud.uaa.UserIdNamePair;
-import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
+import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUserFactory;
 import org.trustedanalytics.user.invite.InvitationsService;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;

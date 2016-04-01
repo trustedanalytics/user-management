@@ -22,7 +22,7 @@ import org.apache.commons.logging.LogFactory;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
-import org.trustedanalytics.org.cloudfoundry.identity.uaa.scim.ScimUser;
+import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.user.common.NoPendingInvitationFoundException;
 import org.trustedanalytics.user.common.OrgAndUserGuids;
 import org.trustedanalytics.user.common.UserExistsException;

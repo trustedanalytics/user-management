@@ -25,6 +25,7 @@ import org.trustedanalytics.cloud.auth.AuthTokenRetriever;
 import org.trustedanalytics.cloud.auth.HeaderAddingHttpInterceptor;
 import org.trustedanalytics.cloud.cc.FeignClient;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
+import org.trustedanalytics.cloud.cc.api.customizations.OAuth2RequestInterceptor;
 import org.trustedanalytics.cloud.uaa.UaaClient;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
 import org.trustedanalytics.user.common.OAuth2PriviligedInterceptor;
@@ -82,8 +83,7 @@ public class UsersConfig {
     protected CcOperations ccClient() {
         return new FeignClient(apiBaseUrl,
                 builder -> builder
-                        .requestInterceptor(template -> template
-                                .header("Authorization", "bearer " + getAccessToken())));
+                        .requestInterceptor(new OAuth2RequestInterceptor(getAccessToken())));
     }
 
     @Bean
