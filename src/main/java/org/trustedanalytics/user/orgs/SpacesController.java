@@ -48,7 +48,9 @@ public class SpacesController {
         this.ccClient = ccClient;
     }
 
-    @ApiOperation(value = "Returns list of spaces.")
+    @ApiOperation(
+            value = "Returns list of spaces current user has access to.",
+            notes = "Privilege level: Any consumer of this endpoint must have a valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = CcSpace.class, responseContainer = "List"),
             @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
@@ -58,7 +60,9 @@ public class SpacesController {
         return ccClient.getSpaces().toList().toBlocking().single();
     }
 
-    @ApiOperation(value="Getting a list of spaces of given organization")
+    @ApiOperation(
+            value="Getting a list of spaces of given organization current user has access to.",
+            notes = "Privilege level: Any consumer of this endpoint must have a valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = CcSpace.class, responseContainer = "List"),
             @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
@@ -68,7 +72,10 @@ public class SpacesController {
         return ccClient.getSpaces(UUID.fromString(org)).toList().toBlocking().single();
     }
 
-    @ApiOperation(value="Creates a new space in organization")
+    @ApiOperation(
+            value = "Creates a new space in organization",
+            notes = "Privilege level:Consumer of this endpoint must be a member of organization the space is created in " +
+                    "with OrgManager role, based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = UUID.class),
             @ApiResponse(code = 400, message = "Bad request"),
@@ -79,7 +86,10 @@ public class SpacesController {
         return ccClient.createSpace(request.getOrgGuid(), request.getName());
     }
 
-    @ApiOperation(value = "Deletes space.")
+    @ApiOperation(
+            value = "Deletes space.",
+            notes = "Privilege level: Consumer of this endpoint must be a member of organization the specified" +
+                    " space is part of, with OrgManager role, based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 404, message = "Space not found."),

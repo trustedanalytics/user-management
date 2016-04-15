@@ -48,7 +48,9 @@ public class CurrentUserController {
         this.passwordValidator = passwordValidator;
     }
 
-    @ApiOperation(value = "Returns current user.")
+    @ApiOperation(
+            value = "Returns current user.",
+            notes = "Privilege level: Any consumer of this endpoint must have a valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = UserModel.class),
             @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
@@ -62,7 +64,9 @@ public class CurrentUserController {
         return user;
     }
 
-    @ApiOperation(value = "Changes password for current user.")
+    @ApiOperation(
+            value = "Changes password for current user.",
+            notes = "Privilege level: Any consumer of this endpoint must have a valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = UserModel.class),
             @ApiResponse(code = 400, message = "Password cannot be empty"),

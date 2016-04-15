@@ -18,9 +18,6 @@ package org.trustedanalytics.user.invite.rest;
 import lombok.Getter;
 import lombok.Setter;
 
-/**
- * Created by GER\sbultrow on 11/21/14
- */
 public class RegistrationModel {
     @Getter @Setter
     private String password;

@@ -55,7 +55,10 @@ public class OrgsController {
         this.detailsFinder = detailsFinder;
     }
 
-    @ApiOperation(value = "Returns list of organizations.")
+    @ApiOperation(
+            value = "Returns list of organizations current user is member of.",
+            notes = "Privilege level: Any consumer of this endpoint must have a valid access token"
+    )
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = Organization.class, responseContainer = "List"),
             @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
@@ -70,7 +73,10 @@ public class OrgsController {
         return FormatTranslator.getOrganizationsWithSpaces(orgs, managedOrgs, spaces);
     }
 
-    @ApiOperation(value = "Renames organization name.")
+    @ApiOperation(
+            value = "Renames organization name",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified organization  " +
+                    "with OrgManager role, based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 400, message = "The organization name is already taken"),
@@ -82,7 +88,10 @@ public class OrgsController {
         ccClient.renameOrg(UUID.fromString(org), request.getName());
     }
 
-    @ApiOperation(value = "Deletes organization.")
+    @ApiOperation(
+            value = "Deletes organization.",
+            notes = "Privilege level: Consumer of this endpoint must have a valid token containing " +
+                    "cloud_controller.admin scope")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 404, message = "Organization not found."),
@@ -93,7 +102,10 @@ public class OrgsController {
         ccClient.deleteOrg(UUID.fromString(org));
     }
 
-    @ApiOperation(value = "Creates a new organization.")
+    @ApiOperation(
+            value = "Creates a new organization.",
+            notes = "Privilege level: Consumer of this endpoint must have a valid token containing "+
+                    "cloud_controller.admin scope")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = UUID.class),
             @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")

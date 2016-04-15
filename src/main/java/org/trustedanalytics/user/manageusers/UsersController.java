@@ -84,8 +84,11 @@ public class UsersController {
         return usersService;
     }
 
-    @ApiOperation(value = "Returns list of users which has at least one role in the organization. NOTE: The CF role " +
-        "'Users' is not included ")
+    @ApiOperation(
+            value = "Returns list of users which has at least one role in the organization. NOTE: The CF role " +
+                    "'Users' is not included ",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified organization based on " +
+                    "valid access token")
     @ApiResponses(value = {
         @ApiResponse(code = 200, message = "OK", response = User.class, responseContainer = "List"),
         @ApiResponse(code = 400, message = "Request was malformed. eg. 'org' is not a valid UUID or organization with" +
@@ -99,7 +102,10 @@ public class UsersController {
             .getOrgUsers(orgUuid);
     }
 
-    @ApiOperation(value = "Returns all users with given role within space identified by given GUID")
+    @ApiOperation(
+            value = "Returns all users with given role within space identified by given GUID",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified space based on " +
+                    "valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = User.class, responseContainer = "List"),
             @ApiResponse(code = 400, message = "Request was malformed. eg. 'space' is not a valid UUID or space with" +
@@ -114,7 +120,11 @@ public class UsersController {
             .getSpaceUsers(spaceUuid, username);
     }
 
-    @ApiOperation(value = "Sends invitations message for new users or returns user for existing one in organization.")
+    @ApiOperation(
+            value = "Sends invitations message for new users or returns user for existing one in organization.",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified organization " +
+                    "with OrgManager role, based on valid access token"
+    )
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = User.class),
             @ApiResponse(code = 400, message = "Request was malformed. eg. 'org' is not a valid UUID or organization with" +
@@ -133,7 +143,10 @@ public class UsersController {
             .addOrgUser(userRequest, orgUuid, currentUser).orElse(null);
     }
 
-    @ApiOperation(value = "Sends invitations message for new users or returns user for existing one in space.")
+    @ApiOperation(
+            value = "Sends invitations message for new users or returns user for existing one in space.",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified space " +
+                    "with SpaceManager role, based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = User.class),
             @ApiResponse(code = 400, message = "Request was malformed. eg. 'space' is not a valid UUID or space with" +
@@ -154,7 +167,10 @@ public class UsersController {
             .addSpaceUser(userRequest, spaceUuid, currentUser).orElse(null);
     }
 
-    @ApiOperation(value = "Updates user roles in organization")
+    @ApiOperation(
+            value = "Updates user roles in organization",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified organization " +
+                    "with OrgManager role, based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = Role.class, responseContainer = "List"),
             @ApiResponse(code = 400, message = "Request was malformed. eg. 'org' is not a valid UUID or organization with" +
@@ -174,7 +190,10 @@ public class UsersController {
                 .updateOrgUserRoles(userGuid, orgGuid, userRolesRequest);
     }
 
-    @ApiOperation(value = "Updates user roles in space")
+    @ApiOperation(
+            value = "Updates user roles in space",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified space " +
+                    "with SpaceManager role, based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = Role.class, responseContainer = "List"),
             @ApiResponse(code = 400, message = "Request was malformed. eg. 'space' is not a valid UUID or space with" +
@@ -194,7 +213,10 @@ public class UsersController {
                 .updateSpaceUserRoles(userGuid, spaceGuid, userRolesRequest);
     }
 
-    @ApiOperation(value = "Deletes user from organization.")
+    @ApiOperation(
+            value = "Deletes user from organization.",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified organization " +
+                    "with OrgManager role, based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 400, message = "Request was malformed. eg. 'org' is not a valid UUID or organization with" +
@@ -211,7 +233,10 @@ public class UsersController {
             .deleteUserFromOrg(userUuid, orgUuid);
     }
 
-    @ApiOperation(value = "Deletes user from space.")
+    @ApiOperation(
+            value = "Deletes user from space.",
+            notes = "Privilege level: Consumer of this endpoint must be a member of specified space " +
+                    "with SpaceManager role, based on valid access token")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 400, message = "Request was malformed. eg. 'space' is not a valid UUID or space with" +

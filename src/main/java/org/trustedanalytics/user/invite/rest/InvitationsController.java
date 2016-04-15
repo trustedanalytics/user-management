@@ -71,7 +71,9 @@ public class InvitationsController {
         this.emailValidator = emailValidator;
     }
 
-    @ApiOperation(value = "Add a new invitation for email.")
+    @ApiOperation(
+            value = "Add a new invitation for email.",
+            notes = "Privilege level: Consumer of this endpoint must have a valid token containing console.admin scope")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = ErrorDescriptionModel.class),
             @ApiResponse(code = 409, message = "Invalid email format."),
@@ -102,7 +104,9 @@ public class InvitationsController {
             });
     }
 
-    @ApiOperation(value = "Get pending invitations.")
+    @ApiOperation(
+            value = "Get pending invitations.",
+            notes = "Privilege level: Consumer of this endpoint must have a valid token containing console.admin scope ")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = String.class, responseContainer = "List"),
             @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")
@@ -113,7 +117,9 @@ public class InvitationsController {
         return invitationsService.getPendingInvitationsEmails();
     }
 
-    @ApiOperation(value = "Resend invitation to the email.")
+    @ApiOperation(
+            value = "Resend invitation to the email.",
+            notes = "Privilege level: Consumer of this endpoint must have a valid token containing console.admin scope ")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 404, message = "Invitation not found."),
@@ -127,7 +133,9 @@ public class InvitationsController {
         invitationsService.resendInviteEmail(email, userName);
     }
 
-    @ApiOperation(value = "Delete an invitation.")
+    @ApiOperation(
+            value = "Delete an invitation.",
+            notes = "Privilege level: Consumer of this endpoint must have a valid token containing console.admin scope ")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK"),
             @ApiResponse(code = 404, message = "Invitation not found."),

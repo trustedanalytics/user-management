@@ -55,7 +55,10 @@ public class AuthorizationController {
         this.ccClient = ccClient;
     }
 
-    @ApiOperation(value = "Returns permissions for user within specified organizations.")
+    @ApiOperation(
+            value = "Returns permissions for user within specified organizations.",
+            notes = "Privilege level: Any consumer of this endpoint must have a valid access token"
+    )
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = CcOrgPermission.class, responseContainer = "List"),
             @ApiResponse(code = 500, message = "Internal server error, e.g. error connecting to CloudController")

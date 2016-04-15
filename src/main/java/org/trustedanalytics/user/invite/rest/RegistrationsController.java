@@ -57,7 +57,9 @@ public class RegistrationsController {
         this.userPasswordValidator = userPasswordValidator;
     }
 
-    @ApiOperation(value = "Registers new user using security code received in email message.")
+    @ApiOperation(
+            value = "Registers new user using security code received in email message.",
+            notes = "Privilege level: Consmer of this endpoint requires a valid one-time security code")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = RegistrationModel.class),
             @ApiResponse(code = 400, message = "Invalid organization name."),
@@ -92,7 +94,9 @@ public class RegistrationsController {
         return newUser;
     }
 
-    @ApiOperation(value = "Gets invitation using security code received in email message.")
+    @ApiOperation(
+            value = "Gets invitation using security code received in email message.",
+            notes = "Privilege level: Consmer of this endpoint requires a valid one-time security code")
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = InvitationModel.class),
             @ApiResponse(code = 403, message = "Security code 'code' empty or null"),
