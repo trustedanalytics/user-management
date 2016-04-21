@@ -109,13 +109,12 @@ public class EmailInvitationsService implements InvitationsService {
     public Optional<OrgAndUserGuids> createUser(String username, String password, String orgName) {
         validateOrgName(orgName);
         validateUsername(username);
-        Optional<UUID> resultGuid = createAndRetrieveUser(username, password);
-        Optional<OrgAndUserGuids> orgAndUserGuids= resultGuid.map(userGuid -> {
-            UUID orgGuid = createOrganization(userGuid, orgName);
-            createSpace(orgGuid, userGuid, "default");
-            return new OrgAndUserGuids(userGuid , orgGuid);
-        });
-        return orgAndUserGuids;
+        return createAndRetrieveUser(username, password)
+                .map(userGuid -> {
+                    UUID orgGuid = createOrganization(userGuid, orgName);
+                    createSpace(orgGuid, userGuid, "default");
+                    return new OrgAndUserGuids(userGuid, orgGuid);
+                });
     }
 
     @Override

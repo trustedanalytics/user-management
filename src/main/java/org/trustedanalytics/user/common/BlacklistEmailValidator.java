@@ -19,8 +19,6 @@ package org.trustedanalytics.user.common;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.trustedanalytics.user.invite.WrongEmailAddressException;
 
 public class BlacklistEmailValidator implements EmailValidator {
