@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/trustedanalytics/user-management.svg?branch=master)](https://travis-ci.org/trustedanalytics/user-management)
+[![Dependency Status](https://www.versioneye.com/user/projects/57234e69ba37ce0031fc189b/badge.svg?style=flat)](https://www.versioneye.com/user/projects/57234e69ba37ce0031fc189b)
 
 User management
 ==========
