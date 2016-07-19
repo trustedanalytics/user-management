@@ -19,10 +19,13 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.cloudfoundry.identity.uaa.scim.ScimUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring4.SpringTemplateEngine;
 import org.trustedanalytics.cloud.cc.api.CcOperations;
 import org.trustedanalytics.cloud.cc.api.manageusers.Role;
 import org.trustedanalytics.cloud.uaa.UaaOperations;
-import org.cloudfoundry.identity.uaa.scim.ScimUser;
 import org.trustedanalytics.user.common.NoPendingInvitationFoundException;
 import org.trustedanalytics.user.common.OrgAndUserGuids;
 import org.trustedanalytics.user.common.UserExistsException;
@@ -30,10 +33,6 @@ import org.trustedanalytics.user.invite.access.AccessInvitations;
 import org.trustedanalytics.user.invite.access.AccessInvitationsService;
 import org.trustedanalytics.user.invite.securitycode.SecurityCode;
 import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring4.SpringTemplateEngine;
 
 import java.util.List;
 import java.util.Map;
@@ -130,7 +129,7 @@ public class EmailInvitationsService implements InvitationsService {
 
     @Override
     public Set<String> getPendingInvitationsEmails() {
-        return accessInvitationsService.getKeys();
+        return securityCodeService.getKeys();
     }
 
     @Override

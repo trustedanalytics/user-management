@@ -19,7 +19,6 @@ import com.google.common.base.Strings;
 import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
 
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
 
 public class AccessInvitationsService {
@@ -83,10 +82,6 @@ public class AccessInvitationsService {
         consumer.accept(userInvitations);
         store.put(email, userInvitations);
         return state;
-    }
-
-    public Set<String> getKeys() {
-        return store.keys();
     }
 
     private void validateStringArgument(String arg) {

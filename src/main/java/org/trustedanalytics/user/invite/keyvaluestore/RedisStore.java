@@ -18,12 +18,11 @@ package org.trustedanalytics.user.invite.keyvaluestore;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisOperations;
 
-import java.util.Map;
-import java.util.Set;
+import java.util.Collection;
 
 public class RedisStore<T> implements KeyValueStore<T> {
     private final String storeKey;
-    
+
     private final HashOperations<String, String, T> hashOps;
 
     public RedisStore(RedisOperations<String, T> redisTemplate, String key) {
@@ -57,12 +56,7 @@ public class RedisStore<T> implements KeyValueStore<T> {
     }
 
     @Override
-    public Set<String> keys() {
-        return hashOps.keys(storeKey);
-    }
-
-    @Override
-    public Map<String, T> entries() {
-        return hashOps.entries(storeKey);
+    public Collection<T> values() {
+        return hashOps.values(storeKey);
     }
 }

@@ -18,7 +18,9 @@ package org.trustedanalytics.user.invite.securitycode;
 import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class SecurityCodeService {
     private final KeyValueStore<SecurityCode> store;
@@ -54,11 +56,16 @@ public class SecurityCodeService {
     }
 
     public Optional<SecurityCode> findByMail(String email) {
-        return store.entries()
-            .entrySet()
-            .stream()
-            .filter(entry -> entry.getValue().getEmail().equals(email))
-            .findFirst()
-            .map(entry -> entry.getValue());
+        return store.values()
+                .stream()
+                .filter(entry -> entry.getEmail().equals(email))
+                .findFirst();
+    }
+
+    public Set<String> getKeys() {
+        return store.values()
+                .stream()
+                .map(entry -> entry.getEmail())
+                .collect(Collectors.toSet());
     }
 }

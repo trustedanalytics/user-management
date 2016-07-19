@@ -15,14 +15,7 @@
  */
 package org.trustedanalytics.user.invite.config;
 
-import org.trustedanalytics.user.invite.keyvaluestore.InMemoryStore;
-import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
-import org.trustedanalytics.user.invite.access.AccessInvitations;
-import org.trustedanalytics.user.invite.access.AccessInvitationsService;
-import org.trustedanalytics.user.invite.keyvaluestore.RedisStore;
-import org.trustedanalytics.user.invite.securitycode.SecurityCode;
-import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
-
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -32,6 +25,16 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.JacksonJsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.trustedanalytics.user.invite.access.AccessInvitations;
+import org.trustedanalytics.user.invite.access.AccessInvitationsService;
+import org.trustedanalytics.user.invite.keyvaluestore.InMemoryStore;
+import org.trustedanalytics.user.invite.keyvaluestore.KeyValueStore;
+import org.trustedanalytics.user.invite.keyvaluestore.RedisStore;
+import org.trustedanalytics.user.invite.securitycode.SecurityCode;
+import org.trustedanalytics.user.invite.securitycode.SecurityCodeService;
+import org.trustedanalytics.user.secure.EncryptionService;
+import org.trustedanalytics.user.secure.serializer.HashedStringRedisSerializer;
+import org.trustedanalytics.user.secure.serializer.SecureJacksonJsonRedisSerializer;
 
 public class StorageConfig {
 
@@ -67,6 +70,29 @@ public class StorageConfig {
         }
     }
 
+
+
+    @Profile("redis")
+    @Configuration
+    public static class RedisSecurityConfig {
+
+        @Value("${security.codes.db.cipher.key}")
+        private String cipher;
+
+        @Value("${security.codes.db.hash.salt}")
+        private String salt;
+
+        @Bean
+        protected EncryptionService encryptionService() {
+            return new EncryptionService(cipher, salt);
+        }
+
+        @Bean
+        protected HashedStringRedisSerializer secureStringRedisSerializer(EncryptionService encryptionService) {
+            return new HashedStringRedisSerializer(encryptionService);
+        }
+    }
+
     @Profile("redis")
     @Configuration
     public static class RedisStorageConfig {
@@ -82,9 +108,17 @@ public class StorageConfig {
         }
 
         @Bean
-        public RedisOperations<String, SecurityCode> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
+        SecureJacksonJsonRedisSerializer<SecurityCode> secureJacksonJsonRedisSerializer(EncryptionService encryptionService) {
+            return new SecureJacksonJsonRedisSerializer<SecurityCode>(SecurityCode.class, encryptionService);
+        }
+
+        @Bean
+        public RedisOperations<String, SecurityCode> redisTemplate(RedisConnectionFactory redisConnectionFactory,
+                                                                   HashedStringRedisSerializer hashedStringRedisSerializer,
+                                                                   SecureJacksonJsonRedisSerializer<SecurityCode> secureJacksonJsonRedisSerializer) {
             return CommonConfiguration.redisTemplate(redisConnectionFactory,
-                    new JacksonJsonRedisSerializer<SecurityCode>(SecurityCode.class));
+                    hashedStringRedisSerializer,
+                    secureJacksonJsonRedisSerializer);
         }
     }
 
@@ -103,9 +137,10 @@ public class StorageConfig {
         }
 
         @Bean
-        public RedisOperations<String, AccessInvitations> redisAccessInvitationsTemplate(
-                RedisConnectionFactory redisConnectionFactory) {
+        public RedisOperations<String, AccessInvitations> redisAccessInvitationsTemplate(RedisConnectionFactory redisConnectionFactory,
+                                                                                         HashedStringRedisSerializer hashedStringRedisSerializer) {
             return CommonConfiguration.redisTemplate(redisConnectionFactory,
+                    hashedStringRedisSerializer,
                     new JacksonJsonRedisSerializer<AccessInvitations>(AccessInvitations.class));
         }
     }
@@ -114,15 +149,16 @@ public class StorageConfig {
         private CommonConfiguration() {
         }
 
-        private static <T> RedisOperations<String, T>
-            redisTemplate(RedisConnectionFactory redisConnectionFactory, RedisSerializer<T> valueSerializer) {
+        private static <T> RedisOperations<String, T> redisTemplate(RedisConnectionFactory redisConnectionFactory,
+                                                                    RedisSerializer<String> keySerializer,
+                                                                    RedisSerializer<T> valueSerializer) {
             RedisTemplate<String, T> template = new RedisTemplate<String, T>();
             template.setConnectionFactory(redisConnectionFactory);
 
             RedisSerializer<String> stringSerializer = new StringRedisSerializer();
             template.setKeySerializer(stringSerializer);
             template.setValueSerializer(valueSerializer);
-            template.setHashKeySerializer(stringSerializer);
+            template.setHashKeySerializer(keySerializer);
             template.setHashValueSerializer(valueSerializer);
 
             return template;

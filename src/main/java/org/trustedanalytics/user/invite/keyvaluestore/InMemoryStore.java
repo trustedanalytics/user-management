@@ -15,9 +15,9 @@
  */
 package org.trustedanalytics.user.invite.keyvaluestore;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class InMemoryStore<T> implements KeyValueStore<T> {
     private final Map<String, T> valuesMap = new HashMap<String, T>();
@@ -48,12 +48,7 @@ public class InMemoryStore<T> implements KeyValueStore<T> {
     }
 
     @Override
-    public Set<String> keys() {
-        return valuesMap.keySet();
-    }
-
-    @Override
-    public Map<String, T> entries() {
-        return valuesMap;
+    public Collection<T> values() {
+        return valuesMap.values();
     }
 }

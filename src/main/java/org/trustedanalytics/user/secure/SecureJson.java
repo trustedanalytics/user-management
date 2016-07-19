@@ -1,5 +1,5 @@
 /**
- *  Copyright (c) 2015 Intel Corporation 
+ *  Copyright (c) 2016 Intel Corporation 
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -13,20 +13,32 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package org.trustedanalytics.user.invite.keyvaluestore;
+package org.trustedanalytics.user.secure;
 
-import java.util.Collection;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-public interface KeyValueStore<T> {
-    boolean hasKey(String key);
+import java.util.Base64;
 
-    T get(String key);
+@ToString
+@EqualsAndHashCode
+public class SecureJson {
+    private String iv;
+    private String value;
 
-    void remove(String key);
+    public SecureJson() {
+    }
 
-    void put(String key, T value);
+    public SecureJson(byte[] iv, byte[] value) {
+        this.iv =  Base64.getEncoder().encodeToString(iv);
+        this.value =  Base64.getEncoder().encodeToString(value);
+    }
 
-    boolean putIfAbsent(String key, T value);
+    public byte[] getIv() {
+        return Base64.getDecoder().decode(iv);
+    }
 
-    Collection<T> values();
+    public byte[] getValue() {
+        return Base64.getDecoder().decode(value);
+    }
 }
